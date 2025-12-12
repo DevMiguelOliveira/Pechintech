@@ -52,14 +52,28 @@ export function useVote() {
           // Remove vote if same type
           await supabase.from('votes').delete().eq('id', existingVote.id);
           
-          // Update product counters
-          const field = voteType === 'hot' ? 'hot_votes' : 'cold_votes';
-          await supabase.rpc('decrement_vote', { 
-            p_product_id: productId, 
-            p_vote_type: voteType 
-          });
+          // Update product counters directly
+          const { data: product } = await supabase
+            .from('products')
+            .select('hot_votes, cold_votes, temperature')
+            .eq('id', productId)
+            .single();
           
-          return { action: 'removed', voteType };
+          if (product) {
+            if (voteType === 'hot') {
+              await supabase.from('products').update({
+                hot_votes: Math.max(0, product.hot_votes - 1),
+                temperature: Math.max(0, product.temperature - 2),
+              }).eq('id', productId);
+            } else {
+              await supabase.from('products').update({
+                cold_votes: Math.max(0, product.cold_votes - 1),
+                temperature: Math.min(100, product.temperature + 2),
+              }).eq('id', productId);
+            }
+          }
+          
+          return { action: 'removed' as const, voteType };
         } else {
           // Change vote type
           await supabase
@@ -67,14 +81,30 @@ export function useVote() {
             .update({ vote_type: voteType })
             .eq('id', existingVote.id);
 
-          // Update product counters (increment new, decrement old)
-          await supabase.rpc('change_vote', {
-            p_product_id: productId,
-            p_old_vote_type: existingVote.vote_type,
-            p_new_vote_type: voteType,
-          });
+          // Update product counters
+          const { data: product } = await supabase
+            .from('products')
+            .select('hot_votes, cold_votes, temperature')
+            .eq('id', productId)
+            .single();
           
-          return { action: 'changed', voteType };
+          if (product) {
+            if (voteType === 'hot') {
+              await supabase.from('products').update({
+                hot_votes: product.hot_votes + 1,
+                cold_votes: Math.max(0, product.cold_votes - 1),
+                temperature: Math.min(100, product.temperature + 4),
+              }).eq('id', productId);
+            } else {
+              await supabase.from('products').update({
+                cold_votes: product.cold_votes + 1,
+                hot_votes: Math.max(0, product.hot_votes - 1),
+                temperature: Math.max(0, product.temperature - 4),
+              }).eq('id', productId);
+            }
+          }
+          
+          return { action: 'changed' as const, voteType };
         }
       } else {
         // New vote
@@ -83,12 +113,27 @@ export function useVote() {
         ]);
 
         // Update product counters
-        await supabase.rpc('increment_vote', {
-          p_product_id: productId,
-          p_vote_type: voteType,
-        });
+        const { data: product } = await supabase
+          .from('products')
+          .select('hot_votes, cold_votes, temperature')
+          .eq('id', productId)
+          .single();
         
-        return { action: 'added', voteType };
+        if (product) {
+          if (voteType === 'hot') {
+            await supabase.from('products').update({
+              hot_votes: product.hot_votes + 1,
+              temperature: Math.min(100, product.temperature + 2),
+            }).eq('id', productId);
+          } else {
+            await supabase.from('products').update({
+              cold_votes: product.cold_votes + 1,
+              temperature: Math.max(0, product.temperature - 2),
+            }).eq('id', productId);
+          }
+        }
+        
+        return { action: 'added' as const, voteType };
       }
     },
     onSuccess: (result) => {

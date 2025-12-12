@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { HeroSection } from '@/components/HeroSection';
@@ -7,8 +8,13 @@ import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { MobileFilters } from '@/components/MobileFilters';
 import { FavoritesDrawer } from '@/components/FavoritesDrawer';
 import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
-import { Product, Comment, Category, SortOption } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import { useVote } from '@/hooks/useVotes';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
+import { useComments, useAddComment } from '@/hooks/useComments';
+import { Product, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Transform DB product to UI product
 const mapDbProductToProduct = (p: DbProduct): Product => ({
@@ -30,36 +36,29 @@ const mapDbProductToProduct = (p: DbProduct): Product => ({
 });
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: dbProducts, isLoading } = useActiveProducts();
   const products = useMemo(() => dbProducts?.map(mapDbProductToProduct) || [], [dbProducts]);
+
+  // Favorites
+  const { data: favoritesSet } = useFavorites();
+  const favorites = favoritesSet || new Set<string>();
+  const toggleFavorite = useToggleFavorite();
+
+  // Votes
+  const vote = useVote();
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSort, setSelectedSort] = useState<SortOption>('hottest');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 
-  // Mock comments
-  const [comments] = useState<Comment[]>([
-    {
-      id: '1',
-      product_id: '1',
-      user_id: '1',
-      content: 'Ótimo preço! Comprei na promoção passada e chegou super rápido.',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      profile: { id: '1', username: 'gamer_br', avatar_url: null, created_at: '' },
-    },
-    {
-      id: '2',
-      product_id: '1',
-      user_id: '2',
-      content: 'Vale muito a pena! O desempenho é incrível para jogos.',
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-      profile: { id: '2', username: 'tech_lover', avatar_url: null, created_at: '' },
-    },
-  ]);
+  // Comments for selected product
+  const { data: productComments = [] } = useComments(selectedProduct?.id);
+  const addComment = useAddComment();
 
   // Filtered and sorted products
   const filteredProducts = useMemo(() => {
@@ -111,72 +110,53 @@ const Index = () => {
 
   // Handlers
   const handleToggleFavorite = (productId: string) => {
-    setFavorites((prev) => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(productId)) {
-        newFavorites.delete(productId);
-        toast({
-          title: 'Removido dos favoritos',
-          description: 'A promoção foi removida da sua lista.',
-        });
-      } else {
-        newFavorites.add(productId);
-        toast({
-          title: 'Adicionado aos favoritos',
-          description: 'A promoção foi salva na sua lista!',
-        });
-      }
-      return newFavorites;
-    });
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Entre na sua conta para salvar favoritos.',
+      });
+      navigate('/auth');
+      return;
+    }
+    toggleFavorite.mutate(productId);
   };
 
   const handleVoteHot = (productId: string) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId
-          ? {
-              ...p,
-              hot_votes: p.hot_votes + 1,
-              temperature: Math.min(100, p.temperature + 2),
-            }
-          : p
-      )
-    );
-    toast({
-      title: '🔥 Voto quente!',
-      description: 'Você esquentou essa promoção!',
-    });
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Entre na sua conta para votar.',
+      });
+      navigate('/auth');
+      return;
+    }
+    vote.mutate({ productId, voteType: 'hot' });
   };
 
   const handleVoteCold = (productId: string) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId
-          ? {
-              ...p,
-              cold_votes: p.cold_votes + 1,
-              temperature: Math.max(0, p.temperature - 2),
-            }
-          : p
-      )
-    );
-    toast({
-      title: '❄️ Voto frio!',
-      description: 'Você esfriou essa promoção.',
-    });
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Entre na sua conta para votar.',
+      });
+      navigate('/auth');
+      return;
+    }
+    vote.mutate({ productId, voteType: 'cold' });
   };
 
   const handleAddComment = (content: string) => {
-    toast({
-      title: 'Comentário adicionado!',
-      description: 'Seu comentário foi publicado.',
-    });
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Entre na sua conta para comentar.',
+      });
+      navigate('/auth');
+      return;
+    }
+    if (!selectedProduct) return;
+    addComment.mutate({ productId: selectedProduct.id, content });
   };
-
-  // Get comments for selected product
-  const productComments = selectedProduct
-    ? comments.filter((c) => c.product_id === selectedProduct.id)
-    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -209,34 +189,57 @@ const Index = () => {
         {/* Main Content */}
         <main className="flex-1 min-w-0">
           <div className="container py-4 lg:py-6">
-            {/* Hero Section */}
-            {!searchQuery && !selectedCategory && (
-              <HeroSection
-                trendingProducts={trendingProducts}
-                onOpenDetails={setSelectedProduct}
-                onToggleFavorite={handleToggleFavorite}
-                onVoteHot={handleVoteHot}
-                onVoteCold={handleVoteCold}
-                favorites={favorites}
-              />
-            )}
+            {isLoading ? (
+              <div className="space-y-6">
+                <Skeleton className="h-64 w-full rounded-xl" />
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {[...Array(6)].map((_, i) => (
+                    <Skeleton key={i} className="h-80 w-full rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Hero Section */}
+                {!searchQuery && !selectedCategory && trendingProducts.length > 0 && (
+                  <HeroSection
+                    trendingProducts={trendingProducts}
+                    onOpenDetails={setSelectedProduct}
+                    onToggleFavorite={handleToggleFavorite}
+                    onVoteHot={handleVoteHot}
+                    onVoteCold={handleVoteCold}
+                    favorites={favorites}
+                  />
+                )}
 
-            {/* Product Grid */}
-            <ProductGrid
-              products={filteredProducts}
-              onOpenDetails={setSelectedProduct}
-              onToggleFavorite={handleToggleFavorite}
-              onVoteHot={handleVoteHot}
-              onVoteCold={handleVoteCold}
-              favorites={favorites}
-              title={
-                selectedCategory
-                  ? `Promoções de ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
-                  : searchQuery
-                  ? `Resultados para "${searchQuery}"`
-                  : 'Todas as Promoções'
-              }
-            />
+                {/* Product Grid */}
+                <ProductGrid
+                  products={filteredProducts}
+                  onOpenDetails={setSelectedProduct}
+                  onToggleFavorite={handleToggleFavorite}
+                  onVoteHot={handleVoteHot}
+                  onVoteCold={handleVoteCold}
+                  favorites={favorites}
+                  title={
+                    selectedCategory
+                      ? `Promoções de ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
+                      : searchQuery
+                      ? `Resultados para "${searchQuery}"`
+                      : 'Todas as Promoções'
+                  }
+                />
+
+                {filteredProducts.length === 0 && !isLoading && (
+                  <div className="text-center py-16">
+                    <p className="text-muted-foreground text-lg">
+                      {searchQuery || selectedCategory 
+                        ? 'Nenhum produto encontrado com esses filtros.'
+                        : 'Nenhum produto cadastrado ainda. Acesse o painel admin para adicionar.'}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>
@@ -246,8 +249,8 @@ const Index = () => {
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onVoteHot={(id) => toast({ title: 'Faça login para votar' })}
-        onVoteCold={(id) => toast({ title: 'Faça login para votar' })}
+        onVoteHot={handleVoteHot}
+        onVoteCold={handleVoteCold}
         comments={productComments}
         onAddComment={handleAddComment}
       />

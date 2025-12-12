@@ -4,40 +4,70 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Comment } from '@/types';
 
+interface DbComment {
+  id: string;
+  product_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
+interface DbProfile {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+}
+
 export function useComments(productId?: string) {
   return useQuery({
     queryKey: ['comments', productId],
     queryFn: async () => {
       if (!productId) return [];
 
-      const { data, error } = await supabase
+      // First get comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .select(`
-          *,
-          profiles:user_id (
-            id,
-            username,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      return data.map((c): Comment => ({
-        id: c.id,
-        product_id: c.product_id,
-        user_id: c.user_id,
-        content: c.content,
-        created_at: c.created_at,
-        profile: c.profiles ? {
-          id: c.profiles.id,
-          username: c.profiles.username,
-          avatar_url: c.profiles.avatar_url,
-          created_at: '',
-        } : undefined,
-      }));
+      if (commentsError) throw commentsError;
+      if (!commentsData || commentsData.length === 0) return [];
+
+      // Get unique user IDs
+      const userIds = [...new Set(commentsData.map((c) => c.user_id))];
+
+      // Fetch profiles for those users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles
+      const profilesMap = new Map<string, DbProfile>();
+      profilesData?.forEach((p) => {
+        profilesMap.set(p.id, p);
+      });
+
+      // Map comments with profiles
+      return commentsData.map((c): Comment => {
+        const profile = profilesMap.get(c.user_id);
+        return {
+          id: c.id,
+          product_id: c.product_id,
+          user_id: c.user_id,
+          content: c.content,
+          created_at: c.created_at,
+          profile: profile ? {
+            id: profile.id,
+            username: profile.username,
+            avatar_url: profile.avatar_url,
+            created_at: '',
+          } : undefined,
+        };
+      });
     },
     enabled: !!productId,
   });
@@ -66,7 +96,17 @@ export function useAddComment() {
       if (error) throw error;
 
       // Update comments count on product
-      await supabase.rpc('increment_comments', { p_product_id: productId });
+      const { data: product } = await supabase
+        .from('products')
+        .select('comments_count')
+        .eq('id', productId)
+        .single();
+
+      if (product) {
+        await supabase.from('products').update({
+          comments_count: product.comments_count + 1,
+        }).eq('id', productId);
+      }
 
       return data;
     },
@@ -102,7 +142,17 @@ export function useDeleteComment() {
       if (error) throw error;
 
       // Update comments count on product
-      await supabase.rpc('decrement_comments', { p_product_id: productId });
+      const { data: product } = await supabase
+        .from('products')
+        .select('comments_count')
+        .eq('id', productId)
+        .single();
+
+      if (product) {
+        await supabase.from('products').update({
+          comments_count: Math.max(0, product.comments_count - 1),
+        }).eq('id', productId);
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['comments', variables.productId] });

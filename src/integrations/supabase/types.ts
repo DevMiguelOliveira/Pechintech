@@ -252,12 +252,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_vote: {
+        Args: {
+          p_new_vote_type: string
+          p_old_vote_type: string
+          p_product_id: string
+        }
+        Returns: undefined
+      }
+      decrement_comments: { Args: { p_product_id: string }; Returns: undefined }
+      decrement_vote: {
+        Args: { p_product_id: string; p_vote_type: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_comments: { Args: { p_product_id: string }; Returns: undefined }
+      increment_vote: {
+        Args: { p_product_id: string; p_vote_type: string }
+        Returns: undefined
       }
       is_first_user: { Args: never; Returns: boolean }
     }

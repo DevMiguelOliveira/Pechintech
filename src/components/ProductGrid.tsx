@@ -36,14 +36,14 @@ export function ProductGrid({
   }
 
   return (
-    <section className="py-6">
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+    <section className="py-4 md:py-6">
+      <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5">
         {products.map((product, index) => (
           <div
             key={product.id}
             className="animate-fade-in"
-            style={{ animationDelay: `${index * 50}ms` }}
+            style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
           >
             <ProductCard
               product={product}

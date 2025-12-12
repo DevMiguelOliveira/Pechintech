@@ -5,21 +5,40 @@ import { HeroSection } from '@/components/HeroSection';
 import { ProductGrid } from '@/components/ProductGrid';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { MobileFilters } from '@/components/MobileFilters';
-import { AuthModal } from '@/components/AuthModal';
 import { FavoritesDrawer } from '@/components/FavoritesDrawer';
-import { mockProducts } from '@/data/mockProducts';
+import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
 import { Product, Comment, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
+// Transform DB product to UI product
+const mapDbProductToProduct = (p: DbProduct): Product => ({
+  id: p.id,
+  title: p.title,
+  description: p.description,
+  image_url: p.image_url,
+  current_price: Number(p.current_price),
+  original_price: Number(p.original_price),
+  affiliate_url: p.affiliate_url,
+  category: p.categories?.slug || 'hardware',
+  temperature: p.temperature,
+  hot_votes: p.hot_votes,
+  cold_votes: p.cold_votes,
+  comments_count: p.comments_count,
+  store: p.store,
+  created_at: p.created_at,
+  specs: p.specs,
+});
+
 const Index = () => {
+  const { data: dbProducts, isLoading } = useActiveProducts();
+  const products = useMemo(() => dbProducts?.map(mapDbProductToProduct) || [], [dbProducts]);
+
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedSort, setSelectedSort] = useState<SortOption>('hottest');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '4', '7']));
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 
   // Mock comments
@@ -163,10 +182,10 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <Header
-        onOpenAuth={() => setIsAuthOpen(true)}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        favoritesCount={favorites.size}
       />
 
       {/* Mobile Filters */}
@@ -227,13 +246,11 @@ const Index = () => {
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onVoteHot={handleVoteHot}
-        onVoteCold={handleVoteCold}
+        onVoteHot={(id) => toast({ title: 'Faça login para votar' })}
+        onVoteCold={(id) => toast({ title: 'Faça login para votar' })}
         comments={productComments}
         onAddComment={handleAddComment}
       />
-
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       <FavoritesDrawer
         isOpen={isFavoritesOpen}

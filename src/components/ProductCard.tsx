@@ -72,7 +72,7 @@ export function ProductCard({
 
       {/* Product Image */}
       <div
-        className="relative aspect-square overflow-hidden cursor-pointer bg-muted/30"
+        className="relative aspect-square overflow-hidden cursor-pointer bg-muted/30 flex items-center justify-center"
         onClick={() => onOpenDetails(product)}
       >
         <img
@@ -82,8 +82,15 @@ export function ProductCard({
           className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
           width={400}
           height={400}
+          style={{ maxWidth: '100%', maxHeight: '100%' }}
+          onError={(e) => {
+            // Fallback para imagem quebrada
+            const target = e.target as HTMLImageElement;
+            target.src = '/placeholder.svg';
+            target.className = 'w-full h-full object-contain p-4 opacity-50';
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/20 to-transparent pointer-events-none" />
       </div>
 
       {/* Content */}

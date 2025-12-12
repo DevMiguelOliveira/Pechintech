@@ -58,6 +58,7 @@ import {
   Package,
 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 
 const iconOptions = [
   { value: 'Cpu', label: 'CPU', Icon: Cpu },
@@ -70,8 +71,7 @@ const iconOptions = [
 ];
 
 const getIconComponent = (iconName: string) => {
-  const option = iconOptions.find((o) => o.value === iconName);
-  return option?.Icon || Package;
+  return getCategoryIcon(iconName);
 };
 
 const emptyForm: CategoryFormData = {
@@ -174,7 +174,10 @@ const Categories = () => {
 
   const handleCreate = (data: CategoryFormData) => {
     createCategory.mutate(data, {
-      onSuccess: () => setIsCreateOpen(false),
+      onSuccess: () => {
+        setIsCreateOpen(false);
+        // Forçar refetch para garantir que aparece imediatamente
+      },
     });
   };
 

@@ -1,27 +1,12 @@
-import { Cpu, Mouse, Smartphone, Gamepad2, Monitor, Laptop, Flame, Clock, MessageCircle, Filter } from 'lucide-react';
+import { Cpu, Flame, Clock, MessageCircle, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Category, SortOption } from '@/types';
 import { cn } from '@/lib/utils';
-
-const categoryIcons: Record<string, React.ElementType> = {
-  hardware: Cpu,
-  peripherals: Mouse,
-  smartphones: Smartphone,
-  games: Gamepad2,
-  monitors: Monitor,
-  notebooks: Laptop,
-};
-
-const categories = [
-  { id: 'hardware', name: 'Hardware' },
-  { id: 'peripherals', name: 'Periféricos' },
-  { id: 'smartphones', name: 'Smartphones' },
-  { id: 'games', name: 'Games' },
-  { id: 'monitors', name: 'Monitores' },
-  { id: 'notebooks', name: 'Notebooks' },
-] as const;
+import { useCategories } from '@/hooks/useCategories';
+import { getCategoryIcon } from '@/lib/categoryIcons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const sortOptions = [
   { id: 'hottest', name: 'Mais Quentes', icon: Flame },
@@ -44,6 +29,8 @@ export function Sidebar({
   onSelectSort,
   className,
 }: SidebarProps) {
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+
   return (
     <aside
       className={cn(
@@ -111,32 +98,41 @@ export function Sidebar({
               >
                 Todas as categorias
               </Button>
-              {categories.map((category) => {
-                const Icon = categoryIcons[category.id];
-                return (
-                  <Button
-                    key={category.id}
-                    variant="ghost"
-                    className={cn(
-                      'w-full justify-start gap-3 font-normal',
-                      'focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                      selectedCategory === category.id && 'bg-primary/10 text-primary'
-                    )}
-                    onClick={() => onSelectCategory(category.id as Category)}
-                    aria-pressed={selectedCategory === category.id}
-                    aria-label={`Filtrar por categoria ${category.name}`}
-                  >
-                    <Icon
+              {categoriesLoading ? (
+                <div className="space-y-1">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
+                  ))}
+                </div>
+              ) : (
+                categories?.map((category) => {
+                  const Icon = getCategoryIcon(category.icon);
+                  const isSelected = selectedCategory === category.slug;
+                  return (
+                    <Button
+                      key={category.id}
+                      variant="ghost"
                       className={cn(
-                        'h-4 w-4',
-                        selectedCategory === category.id && 'text-primary'
+                        'w-full justify-start gap-3 font-normal',
+                        'focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                        isSelected && 'bg-primary/10 text-primary'
                       )}
-                      aria-hidden="true"
-                    />
-                    {category.name}
-                  </Button>
-                );
-              })}
+                      onClick={() => onSelectCategory(category.slug as Category)}
+                      aria-pressed={isSelected}
+                      aria-label={`Filtrar por categoria ${category.name}`}
+                    >
+                      <Icon
+                        className={cn(
+                          'h-4 w-4 shrink-0',
+                          isSelected && 'text-primary'
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">{category.name}</span>
+                    </Button>
+                  );
+                })
+              )}
             </div>
           </div>
 

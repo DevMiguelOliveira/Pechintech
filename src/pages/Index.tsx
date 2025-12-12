@@ -76,7 +76,7 @@ const Index = () => {
       );
     }
 
-    // Category filter
+    // Category filter (usa slug da categoria)
     if (selectedCategory) {
       result = result.filter((p) => p.category === selectedCategory);
     }

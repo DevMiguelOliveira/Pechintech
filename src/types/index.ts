@@ -47,12 +47,7 @@ export interface Vote {
   created_at: string;
 }
 
-export type Category = 
-  | 'hardware'
-  | 'peripherals'
-  | 'smartphones'
-  | 'games'
-  | 'monitors'
-  | 'notebooks';
+// Category type - aceita qualquer string para suportar categorias dinâmicas do banco
+export type Category = string;
 
 export type SortOption = 'hottest' | 'newest' | 'commented';

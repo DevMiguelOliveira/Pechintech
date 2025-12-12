@@ -29,6 +29,8 @@ export function useCategories() {
       if (error) throw error;
       return data as DbCategory[];
     },
+    staleTime: 0, // Sempre buscar dados atualizados
+    refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
   });
 }
 
@@ -47,10 +49,12 @@ export function useCreateCategory() {
       return data;
     },
     onSuccess: () => {
+      // Invalidar e refetch imediatamente
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria criada!',
-        description: 'A categoria foi adicionada com sucesso.',
+        description: 'A categoria foi adicionada com sucesso e já está disponível no menu.',
       });
     },
     onError: (error: Error) => {
@@ -80,6 +84,7 @@ export function useUpdateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria atualizada!',
         description: 'As alterações foram salvas.',
@@ -109,6 +114,7 @@ export function useDeleteCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria excluída!',
         description: 'A categoria foi removida.',

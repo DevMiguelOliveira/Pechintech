@@ -70,14 +70,20 @@ export function ProductDetailModal({
         <ScrollArea className="max-h-[90vh]">
           <div className="relative">
             {/* Product Image */}
-            <div className="relative aspect-video w-full overflow-hidden">
+            <div className="relative aspect-video w-full overflow-hidden bg-muted/30 flex items-center justify-center">
               <img
                 src={product.image_url}
                 alt={product.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-4"
                 loading="eager"
                 width={800}
                 height={450}
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/placeholder.svg';
+                  target.className = 'w-full h-full object-contain p-4 opacity-50';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
               

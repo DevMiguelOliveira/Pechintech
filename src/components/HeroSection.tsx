@@ -46,21 +46,16 @@ export function HeroSection({
 
         {/* Featured Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
-          {trendingProducts.slice(0, 4).map((product, index) => (
-            <div
+          {trendingProducts.slice(0, 4).map((product) => (
+            <ProductCard
               key={product.id}
-              className="animate-slide-up"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <ProductCard
-                product={product}
-                onOpenDetails={onOpenDetails}
-                onToggleFavorite={onToggleFavorite}
-                onVoteHot={onVoteHot}
-                onVoteCold={onVoteCold}
-                isFavorite={favorites.has(product.id)}
-              />
-            </div>
+              product={product}
+              onOpenDetails={onOpenDetails}
+              onToggleFavorite={onToggleFavorite}
+              onVoteHot={onVoteHot}
+              onVoteCold={onVoteCold}
+              isFavorite={favorites.has(product.id)}
+            />
           ))}
         </div>
       </div>

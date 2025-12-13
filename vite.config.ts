@@ -63,11 +63,6 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       sourcemap: !isProduction,
     },
-    css: {
-      postcss: {
-        plugins: [],
-      },
-    },
     optimizeDeps: {
       include: [
         "react",

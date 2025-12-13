@@ -1,24 +1,6 @@
 /**
  * Cliente Supabase Singleton
- * 
- * Garante uma única instância do cliente Supabase em toda a aplicação.
- * Implementa padrão Singleton para evitar múltiplas conexões.
- * 
- * Configurações de segurança:
- * - Valida variáveis de ambiente antes de criar o cliente
- * - Configura persistência de sessão apenas no cliente (browser)
- * - Adiciona header de identificação do cliente
- * 
- * @throws {Error} Se as variáveis de ambiente não estiverem configuradas
- * 
- * @example
- * ```ts
- * import { supabase } from '@/services/supabase/client';
- * 
- * const { data, error } = await supabase
- *   .from('products')
- *   .select('*');
- * ```
+ * Garante uma única instância do cliente em toda a aplicação
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
@@ -34,11 +16,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 /**
  * Cliente Supabase singleton
- * 
- * Única instância do cliente Supabase para toda a aplicação.
- * Use este cliente para todas as operações com Supabase (auth, database, storage, realtime).
- * 
- * @type {SupabaseClient<Database>}
+ * Use este cliente para todas as operações com Supabase
  */
 export const supabase: SupabaseClient<Database> = createClient<Database>(
   SUPABASE_URL,

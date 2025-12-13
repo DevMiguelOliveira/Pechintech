@@ -12,7 +12,7 @@ import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
 import { useVote } from '@/hooks/useVotes';
 import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
-import { useComments, useAddComment } from '@/hooks/useComments';
+import { useComments, useAddComment, useDeleteComment } from '@/hooks/useComments';
 import { Product, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,13 +34,18 @@ const mapDbProductToProduct = (p: DbProduct): Product => ({
   store: p.store,
   created_at: p.created_at,
   specs: p.specs,
+  coupon_code: p.coupon_code,
 });
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: dbProducts, isLoading } = useActiveProducts();
-  const products = useMemo(() => dbProducts?.map(mapDbProductToProduct) || [], [dbProducts]);
+  
+  const products = useMemo(() => {
+    if (!dbProducts) return [];
+    return dbProducts.map((p) => mapDbProductToProduct(p));
+  }, [dbProducts]);
 
   // Favorites
   const { data: favoritesSet } = useFavorites();
@@ -60,6 +65,7 @@ const Index = () => {
   // Comments for selected product
   const { data: productComments = [] } = useComments(selectedProduct?.id);
   const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
 
   // Filtered and sorted products
   const filteredProducts = useMemo(() => {
@@ -159,6 +165,11 @@ const Index = () => {
     addComment.mutate({ productId: selectedProduct.id, content });
   };
 
+  const handleDeleteComment = (commentId: string) => {
+    if (!selectedProduct) return;
+    deleteComment.mutate({ commentId, productId: selectedProduct.id });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -194,7 +205,7 @@ const Index = () => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 lg:ml-64">
           <div className="container py-4 lg:py-6">
             {isLoading ? (
               <div className="space-y-6">
@@ -207,7 +218,7 @@ const Index = () => {
               </div>
             ) : (
               <>
-                {/* Hero Section */}
+                {/* Hero Section - Trending Products */}
                 {!searchQuery && !selectedCategory && trendingProducts.length > 0 && (
                   <HeroSection
                     trendingProducts={trendingProducts}
@@ -232,7 +243,7 @@ const Index = () => {
                       ? `Promoções de ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
                       : searchQuery
                       ? `Resultados para "${searchQuery}"`
-                      : 'Todas as Promoções'
+                      : 'As ofertas mais votadas pela comunidade'
                   }
                 />
 
@@ -260,6 +271,7 @@ const Index = () => {
         onVoteCold={handleVoteCold}
         comments={productComments}
         onAddComment={handleAddComment}
+        onDeleteComment={handleDeleteComment}
       />
 
       <FavoritesDrawer

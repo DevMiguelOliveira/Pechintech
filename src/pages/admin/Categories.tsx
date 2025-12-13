@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -50,7 +51,6 @@ import {
   Trash2,
   Loader2,
 } from 'lucide-react';
-import { SEO } from '@/components/SEO';
 
 const emptyForm: CategoryFormData = {
   name: '',
@@ -63,21 +63,15 @@ const CategoryForm = ({
   onSubmit,
   isLoading,
   onCancel,
-  excludeCategoryId,
+  categories,
 }: {
   initialData: CategoryFormData;
   onSubmit: (data: CategoryFormData) => void;
   isLoading: boolean;
   onCancel: () => void;
-  excludeCategoryId?: string; // Para evitar que uma categoria seja pai de si mesma
+  categories?: DbCategory[];
 }) => {
   const [form, setForm] = useState(initialData);
-  const { data: allCategories } = useCategories();
-
-  // Filtrar categorias disponíveis para serem pais (excluir a própria categoria se estiver editando)
-  const availableParentCategories = allCategories?.filter(
-    (cat) => cat.id !== excludeCategoryId
-  ) || [];
 
   const handleNameChange = (name: string) => {
     const slug = name
@@ -95,63 +89,58 @@ const CategoryForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome *</Label>
+    <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
+      <div className="space-y-0.5 sm:space-y-1">
+        <Label htmlFor="name" className="text-[10px] sm:text-xs">Nome *</Label>
         <Input
           id="name"
           value={form.name}
           onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Ex: Processadores"
           required
+          className="h-7 sm:h-8 text-[11px] sm:text-xs"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="slug">Slug (URL) *</Label>
+      <div className="space-y-0.5 sm:space-y-1">
+        <Label htmlFor="slug" className="text-[10px] sm:text-xs">Slug (URL)</Label>
         <Input
           id="slug"
           value={form.slug}
           onChange={(e) => setForm({ ...form, slug: e.target.value })}
-          placeholder="Ex: processadores"
           required
+          className="h-7 sm:h-8 text-[11px] sm:text-xs font-mono"
         />
-        <p className="text-xs text-muted-foreground">
-          URL amigável para a categoria (ex: processadores, placas-de-video)
-        </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="parent_id">Categoria Pai (Opcional)</Label>
-        <Select
-          value={form.parent_id || ''}
-          onValueChange={(value) => setForm({ ...form, parent_id: value || null })}
+      <div className="space-y-0.5 sm:space-y-1">
+        <Label htmlFor="parent_id" className="text-[10px] sm:text-xs">Categoria Pai</Label>
+        <Select 
+          value={form.parent_id || '__none__'} 
+          onValueChange={(value) => setForm({ ...form, parent_id: value === '__none__' ? null : value })}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma categoria pai para criar subcategoria" />
+          <SelectTrigger className="h-7 sm:h-8 text-[11px] sm:text-xs">
+            <SelectValue placeholder="Selecione" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Nenhuma (Categoria Principal)</SelectItem>
-            {availableParentCategories
-              .filter((cat) => !cat.parent_id) // Apenas categorias raiz podem ser pais
-              .map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
+            <SelectItem value="__none__">Nenhuma (raiz)</SelectItem>
+            {categories?.filter((cat) => !cat.parent_id).map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Deixe em branco para criar uma categoria principal. Selecione uma categoria para criar uma subcategoria.
+        <p className="text-[9px] sm:text-[10px] text-muted-foreground">
+          Opcional - selecione para criar subcategoria.
         </p>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+      <div className="flex gap-2 pt-2 border-t border-border/50">
+        <Button type="button" variant="outline" onClick={onCancel} size="sm" className="flex-1 h-7 sm:h-8 text-[10px] sm:text-xs">
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading} className="flex-1">
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isLoading} size="sm" className="flex-1 h-7 sm:h-8 text-[10px] sm:text-xs">
+          {isLoading && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
           Salvar
         </Button>
       </div>
@@ -171,10 +160,7 @@ const Categories = () => {
 
   const handleCreate = (data: CategoryFormData) => {
     createCategory.mutate(data, {
-      onSuccess: () => {
-        setIsCreateOpen(false);
-        // Forçar refetch para garantir que aparece imediatamente
-      },
+      onSuccess: () => setIsCreateOpen(false),
     });
   };
 
@@ -195,12 +181,6 @@ const Categories = () => {
 
   return (
     <div className="space-y-6">
-      <SEO
-        title="Painel Administrativo - Categorias"
-        description="Gerencie categorias de produtos no painel administrativo do PechinTech"
-        url="/admin/categories"
-        noindex
-      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Categorias</h1>
@@ -210,22 +190,27 @@ const Categories = () => {
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button size="sm" className="h-8 text-xs sm:text-sm">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
               Nova Categoria
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nova Categoria</DialogTitle>
+          <DialogContent className="w-[94vw] max-w-[320px] sm:max-w-sm p-3 sm:p-4 max-h-[85vh] flex flex-col" aria-describedby="create-category-description">
+            <DialogHeader className="pb-1 sm:pb-2 shrink-0">
+              <DialogTitle className="text-sm sm:text-base">Nova Categoria</DialogTitle>
+              <DialogDescription id="create-category-description" className="text-[10px] sm:text-xs">
+                Preencha os campos para criar uma nova categoria.
+              </DialogDescription>
             </DialogHeader>
-            <CategoryForm
-              initialData={emptyForm}
-              onSubmit={handleCreate}
-              isLoading={createCategory.isPending}
-              onCancel={() => setIsCreateOpen(false)}
-              excludeCategoryId={undefined}
-            />
+            <div className="overflow-y-auto flex-1 pr-1">
+              <CategoryForm
+                initialData={emptyForm}
+                onSubmit={handleCreate}
+                isLoading={createCategory.isPending}
+                onCancel={() => setIsCreateOpen(false)}
+                categories={categories}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -256,29 +241,20 @@ const Categories = () => {
                 </TableHeader>
                 <TableBody>
                   {categories?.map((category) => {
-                    const isSubcategory = !!category.parent_id;
                     return (
-                      <TableRow key={category.id} className={isSubcategory ? 'bg-muted/30' : ''}>
+                      <TableRow key={category.id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {isSubcategory && (
-                              <span className="text-xs text-muted-foreground">└─</span>
-                            )}
-                            <span>{category.name}</span>
-                            {isSubcategory && (
-                              <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                Subcategoria
-                              </span>
-                            )}
-                          </div>
+                          {category.parent_id ? (
+                            <span className="text-muted-foreground">└─ {category.name}</span>
+                          ) : (
+                            category.name
+                          )}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {category.slug}
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-muted-foreground">
-                          {category.parent?.name || (
-                            <span className="text-muted-foreground/50">—</span>
-                          )}
+                          {category.parent?.name || '—'}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
@@ -286,7 +262,6 @@ const Categories = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => setEditingCategory(category)}
-                              aria-label={`Editar categoria ${category.name}`}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -294,7 +269,6 @@ const Categories = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => setDeletingCategory(category)}
-                              aria-label={`Excluir categoria ${category.name}`}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -312,23 +286,28 @@ const Categories = () => {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Categoria</DialogTitle>
+        <DialogContent className="w-[94vw] max-w-[320px] sm:max-w-sm p-3 sm:p-4 max-h-[85vh] flex flex-col" aria-describedby="edit-category-description">
+          <DialogHeader className="pb-1 sm:pb-2 shrink-0">
+            <DialogTitle className="text-sm sm:text-base">Editar Categoria</DialogTitle>
+            <DialogDescription id="edit-category-description" className="text-[10px] sm:text-xs">
+              Altere os campos para atualizar a categoria.
+            </DialogDescription>
           </DialogHeader>
-          {editingCategory && (
-            <CategoryForm
-              initialData={{
-                name: editingCategory.name,
-                slug: editingCategory.slug,
-                parent_id: editingCategory.parent_id || null,
-              }}
-              onSubmit={handleUpdate}
-              isLoading={updateCategory.isPending}
-              onCancel={() => setEditingCategory(null)}
-              excludeCategoryId={editingCategory.id}
-            />
-          )}
+          <div className="overflow-y-auto flex-1 pr-1">
+            {editingCategory && (
+              <CategoryForm
+                initialData={{
+                  name: editingCategory.name,
+                  slug: editingCategory.slug,
+                  parent_id: editingCategory.parent_id,
+                }}
+                onSubmit={handleUpdate}
+                isLoading={updateCategory.isPending}
+                onCancel={() => setEditingCategory(null)}
+                categories={categories?.filter((cat) => cat.id !== editingCategory.id)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

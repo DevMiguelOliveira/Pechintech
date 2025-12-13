@@ -36,13 +36,13 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
           </span>
         </Link>
 
-        {/* Search Bar - Desktop */}
-        <div className="flex-1 max-w-xl hidden md:flex">
+        {/* Search Bar - Sempre visível */}
+        <div className="flex-1 max-w-xl">
           <div className="relative w-full group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder="Buscar promoções de tech..."
-              className="pl-10 bg-secondary border-border/50 focus:border-primary/50 focus:ring-primary/20 h-10"
+              placeholder="Buscar promoções..."
+              className="pl-10 bg-secondary border-border/50 focus:border-primary/50 focus:ring-primary/20 h-9 md:h-10 text-sm"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               aria-label="Buscar promoções"
@@ -102,40 +102,22 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
-      {/* Mobile Search & Menu */}
+      {/* Mobile Menu */}
       <div
-        id="mobile-menu"
         className={cn(
           'md:hidden overflow-hidden transition-all duration-300',
           isMobileMenuOpen ? 'max-h-64 border-t border-border/50' : 'max-h-0'
         )}
-        aria-hidden={!isMobileMenuOpen}
       >
-        <div className="container py-4 space-y-4">
-          {/* Mobile Search */}
-          <div className="relative w-full group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar promoções..."
-              className="pl-10 bg-secondary border-border/50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              aria-label="Buscar promoções"
-              type="search"
-            />
-          </div>
-
+        <div className="container py-4 space-y-3">
           {/* Admin Link Mobile */}
           {isAdmin && (
             <Button variant="outline" className="w-full" asChild>
@@ -147,7 +129,7 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
           )}
 
           {/* Mobile Auth Buttons */}
-          <div className="flex gap-2 sm:hidden">
+          <div className="flex gap-2">
             {user ? (
               <Button variant="outline" className="flex-1" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />

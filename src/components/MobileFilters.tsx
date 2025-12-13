@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Filter, Flame, Clock, MessageCircle, ChevronRight } from 'lucide-react';
+import { Filter, Flame, Clock, MessageCircle, ChevronRight, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -51,9 +52,17 @@ export function MobileFilters({
   selectedSort,
   onSelectSort,
 }: MobileFiltersProps) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  const handleGoHome = () => {
+    onSelectCategory(null);
+    onSelectSort('hottest');
+    navigate('/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const { rootCategories, subcategoriesMap } = organizeCategoriesHierarchy(
     categories || []
@@ -75,6 +84,17 @@ export function MobileFilters({
     <div className="lg:hidden sticky top-16 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
       <div className="container">
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1">
+          {/* Home Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            onClick={handleGoHome}
+          >
+            <Home className="h-4 w-4 mr-1" />
+            Início
+          </Button>
+
           {/* Filter Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>

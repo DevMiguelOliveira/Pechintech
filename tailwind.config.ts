@@ -18,17 +18,13 @@ export default {
 			'2xl': '1536px',
 		},
 		container: {
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
-  prefix: "",
-  theme: {
-    container: {
-      center: true,
-      padding: "1rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
-    extend: {
+			center: true,
+			padding: "1rem",
+			screens: {
+				"2xl": "1400px",
+			},
+		},
+		extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         display: ['Orbitron', 'sans-serif'],

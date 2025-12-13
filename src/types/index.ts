@@ -14,6 +14,7 @@ export interface Product {
   store: string;
   created_at: string;
   specs?: Record<string, string>;
+  coupon_code?: string | null;
 }
 
 export interface Profile {

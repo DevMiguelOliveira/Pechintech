@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/services/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Comment } from '@/types';
-import { validateCommentContent } from '@/utils/contentModeration';
 
 interface DbComment {
   id: string;
@@ -88,15 +87,9 @@ export function useAddComment() {
     }) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      // Validar conteúdo antes de inserir
-      const validation = validateCommentContent(content.trim());
-      if (!validation.isValid) {
-        throw new Error(validation.error || 'Conteúdo inválido');
-      }
-
       const { data, error } = await supabase
         .from('comments')
-        .insert([{ product_id: productId, user_id: user.id, content: content.trim() }])
+        .insert([{ product_id: productId, user_id: user.id, content }])
         .select()
         .single();
 
@@ -127,15 +120,8 @@ export function useAddComment() {
       });
     },
     onError: (error: Error) => {
-      // Mensagens de erro mais amigáveis para validação
-      const isValidationError = 
-        error.message.includes('Links não são permitidos') ||
-        error.message.includes('palavras inadequadas') ||
-        error.message.includes('não pode estar vazio') ||
-        error.message.includes('máximo');
-
       toast({
-        title: isValidationError ? 'Comentário inválido' : 'Erro ao comentar',
+        title: 'Erro ao comentar',
         description: error.message,
         variant: 'destructive',
       });

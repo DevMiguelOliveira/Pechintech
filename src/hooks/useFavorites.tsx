@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/services/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
@@ -20,6 +20,8 @@ export function useFavorites() {
       return new Set(data.map((f) => f.product_id));
     },
     enabled: !!user,
+    initialData: new Set<string>(),
+    staleTime: 1000 * 60 * 5,
   });
 }
 

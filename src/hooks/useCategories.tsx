@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/services/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface DbCategory {
@@ -22,44 +22,36 @@ export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: categoriesData, error } = await supabase
         .from('categories')
-        .select(`
-          *,
-          parent:parent_id (
-            id,
-            name,
-            slug
-          )
-        `)
+        .select('*')
         .order('name');
 
       if (error) throw error;
-      return data as DbCategory[];
+
+      if (!categoriesData || categoriesData.length === 0) {
+        return [] as DbCategory[];
+      }
+
+      // Criar um mapa de categorias por ID para lookup eficiente
+      const categoriesMap = new Map<string, DbCategory>();
+      categoriesData.forEach((cat) => {
+        categoriesMap.set(cat.id, { ...cat, parent: null } as DbCategory);
+      });
+
+      // Mapear categorias com referências aos pais
+      const categoriesWithParents: DbCategory[] = categoriesData.map((cat) => {
+        const category: DbCategory = {
+          ...cat,
+          parent: cat.parent_id ? categoriesMap.get(cat.parent_id) || null : null,
+        };
+        return category;
+      });
+
+      return categoriesWithParents;
     },
     staleTime: 0, // Sempre buscar dados atualizados
     refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
-  });
-}
-
-/**
- * Hook para buscar apenas categorias raiz (sem parent)
- */
-export function useRootCategories() {
-  return useQuery({
-    queryKey: ['categories', 'root'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .is('parent_id', null)
-        .order('name');
-
-      if (error) throw error;
-      return data as DbCategory[];
-    },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
   });
 }
 
@@ -78,12 +70,10 @@ export function useCreateCategory() {
       return data;
     },
     onSuccess: () => {
-      // Invalidar e refetch imediatamente
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria criada!',
-        description: 'A categoria foi adicionada com sucesso e já está disponível no menu.',
+        description: 'A categoria foi adicionada com sucesso.',
       });
     },
     onError: (error: Error) => {
@@ -113,7 +103,6 @@ export function useUpdateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria atualizada!',
         description: 'As alterações foram salvas.',
@@ -143,7 +132,6 @@ export function useDeleteCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.refetchQueries({ queryKey: ['categories'] });
       toast({
         title: 'Categoria excluída!',
         description: 'A categoria foi removida.',

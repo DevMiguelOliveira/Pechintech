@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import { X, ExternalLink, Store, MessageCircle, Send, User, AlertCircle } from 'lucide-react';
-import { validateCommentContent } from '@/utils/contentModeration';
+import { ExternalLink, Store, MessageCircle, Send, User, Trash2, Share2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Thermometer } from '@/components/Thermometer';
 import { Product, Comment } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -23,6 +21,7 @@ interface ProductDetailModalProps {
   onVoteCold: (productId: string) => void;
   comments: Comment[];
   onAddComment: (content: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 
 export function ProductDetailModal({
@@ -33,9 +32,10 @@ export function ProductDetailModal({
   onVoteCold,
   comments,
   onAddComment,
+  onDeleteComment,
 }: ProductDetailModalProps) {
   const [newComment, setNewComment] = useState('');
-  const [commentError, setCommentError] = useState<string | null>(null);
+  const { user, isAdmin } = useAuth();
 
   if (!product) return null;
 
@@ -50,251 +50,214 @@ export function ProductDetailModal({
     });
   };
 
-  const handleCommentChange = (value: string) => {
-    setNewComment(value);
-    
-    // Limpar erro quando o usuário começar a digitar novamente
-    if (commentError) {
-      setCommentError(null);
-    }
-
-    // Validação em tempo real para feedback imediato
-    if (value.trim().length > 0) {
-      const validation = validateCommentContent(value);
-      if (!validation.isValid && validation.error) {
-        setCommentError(validation.error);
-      }
-    }
-  };
-
   const handleSubmitComment = () => {
-    const trimmedComment = newComment.trim();
-    
-    if (!trimmedComment) {
-      setCommentError('O comentário não pode estar vazio.');
-      return;
+    if (newComment.trim()) {
+      onAddComment(newComment.trim());
+      setNewComment('');
     }
-
-    const validation = validateCommentContent(trimmedComment);
-    if (!validation.isValid) {
-      setCommentError(validation.error || 'Conteúdo inválido');
-      return;
-    }
-
-    onAddComment(trimmedComment);
-    setNewComment('');
-    setCommentError(null);
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
     });
+  };
+
+  const handleShareWhatsApp = () => {
+    let message = `🔥 *PROMOÇÃO IMPERDÍVEL!* 🔥\n\n`;
+    message += `*${product.title}*\n\n`;
+    message += `💰 De ~R$ ${product.original_price.toFixed(2)}~ por apenas:\n`;
+    message += `✅ *R$ ${product.current_price.toFixed(2)}* (-${discount}%)\n\n`;
+    message += `🏪 Loja: ${product.store}\n`;
+    
+    if (product.coupon_code) {
+      message += `🎫 Cupom: *${product.coupon_code}*\n`;
+    }
+    
+    message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
+    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 bg-card overflow-hidden">
-        <ScrollArea className="max-h-[90vh]">
-          <div className="relative">
-            {/* Product Image */}
-            <div className="relative aspect-video w-full overflow-hidden bg-muted/30 flex items-center justify-center">
-              <img
-                src={product.image_url}
-                alt={product.title}
-                className="w-full h-full object-contain p-4"
-                loading="eager"
-                width={800}
-                height={450}
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder.svg';
-                  target.className = 'w-full h-full object-contain p-4 opacity-50';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
-              
-              {/* Discount Badge */}
-              {discount > 0 && (
-                <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground text-lg font-bold px-3 py-1">
-                  -{discount}%
-                </Badge>
-              )}
+      <DialogContent className="w-[92vw] max-w-[360px] sm:max-w-[420px] md:max-w-[480px] lg:max-w-[520px] p-0 gap-0 bg-card overflow-hidden">
+        {/* Product Image */}
+        <div className="relative h-24 sm:h-28 md:h-32 lg:h-36 w-full overflow-hidden bg-muted/30">
+          <img
+            src={product.image_url}
+            alt={product.title}
+            className="w-full h-full object-contain"
+            loading="eager"
+          />
+          {discount > 0 && (
+            <Badge className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold px-1.5 py-0.5">
+              -{discount}%
+            </Badge>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-2.5 sm:p-3 md:p-4 space-y-2 sm:space-y-2.5 md:space-y-3">
+          {/* Badges */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            <Badge variant="outline" className="text-[9px] sm:text-[10px] md:text-xs h-4 sm:h-5 px-1.5">
+              <Store className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5" />
+              {product.store}
+            </Badge>
+            <Badge variant="secondary" className="capitalize text-[9px] sm:text-[10px] md:text-xs h-4 sm:h-5 px-1.5">
+              {product.category}
+            </Badge>
+          </div>
+
+          {/* Title */}
+          <DialogTitle className="text-xs sm:text-sm md:text-base font-bold leading-tight line-clamp-2">
+            {product.title}
+          </DialogTitle>
+
+          {/* Description */}
+          <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground line-clamp-2">
+            {product.description}
+          </p>
+
+          {/* Price & Buttons */}
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground line-through block">
+                {formatPrice(product.original_price)}
+              </span>
+              <span className="text-base sm:text-lg md:text-xl font-bold text-primary">
+                {formatPrice(product.current_price)}
+              </span>
             </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Header */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline">
-                    <Store className="h-3 w-3 mr-1" />
-                    {product.store}
-                  </Badge>
-                  <Badge variant="secondary" className="capitalize">
-                    {product.category}
-                  </Badge>
-                </div>
-
-                <DialogTitle className="text-2xl font-bold leading-tight">
-                  {product.title}
-                </DialogTitle>
-
-                <p className="text-muted-foreground">{product.description}</p>
-              </div>
-
-              {/* Price & Thermometer */}
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground line-through">
-                    {formatPrice(product.original_price)}
-                  </span>
-                  <div className="text-3xl font-bold text-primary">
-                    {formatPrice(product.current_price)}
-                  </div>
-                  <Button
-                    variant="neon"
-                    size="lg"
-                    className="w-full mt-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
-                    aria-label={`Ir para ${product.store} comprar ${product.title}`}
-                  >
-                    <ExternalLink className="h-5 w-5" aria-hidden="true" />
-                    Pegar Promoção
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-sm font-medium">Temperatura da Oferta</span>
-                  <Thermometer
-                    temperature={product.temperature}
-                    hotVotes={product.hot_votes}
-                    coldVotes={product.cold_votes}
-                    onVoteHot={() => onVoteHot(product.id)}
-                    onVoteCold={() => onVoteCold(product.id)}
-                    size="lg"
-                  />
-                </div>
-              </div>
-
-              {/* Specs */}
-              {product.specs && Object.keys(product.specs).length > 0 && (
-                <>
-                  <Separator className="bg-border/50" />
-                  <div>
-                    <h4 className="font-semibold mb-3">Especificações</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(product.specs).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="rounded-lg bg-surface-elevated p-3"
-                        >
-                          <div className="text-xs text-muted-foreground">{key}</div>
-                          <div className="font-medium text-sm">{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Comments Section */}
-              <Separator className="bg-border/50" />
-              <div>
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4" />
-                  Comentários ({comments.length})
-                </h4>
-
-                {/* Add Comment */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Adicionar um comentário..."
-                        value={newComment}
-                        onChange={(e) => handleCommentChange(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmitComment();
-                          }
-                        }}
-                        className={`
-                          bg-surface-elevated border-border/50 
-                          focus:ring-2 focus:ring-primary focus:ring-offset-2
-                          ${commentError ? 'border-destructive focus:ring-destructive' : ''}
-                        `}
-                        aria-label="Campo de comentário"
-                        maxLength={1000}
-                        aria-invalid={!!commentError}
-                        aria-describedby={commentError ? 'comment-error' : undefined}
-                      />
-                      {commentError && (
-                        <div 
-                          id="comment-error"
-                          className="flex items-center gap-1.5 mt-1.5 text-sm text-destructive"
-                          role="alert"
-                        >
-                          <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          <span>{commentError}</span>
-                        </div>
-                      )}
-                      <div className="text-xs text-muted-foreground mt-1 text-right">
-                        {newComment.length}/1000 caracteres
-                      </div>
-                    </div>
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim() || !!commentError}
-                      aria-label="Enviar comentário"
-                      className="focus:ring-2 focus:ring-primary focus:ring-offset-2 shrink-0"
-                    >
-                      <Send className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Comments List */}
-                <div className="space-y-3">
-                  {comments.length === 0 ? (
-                    <p className="text-center text-muted-foreground text-sm py-6">
-                      Seja o primeiro a comentar!
-                    </p>
-                  ) : (
-                    comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="rounded-lg bg-surface-elevated p-4"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                            <User className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-sm">
-                              {comment.profile?.username || 'Usuário'}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {formatDate(comment.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm">{comment.content}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="neon"
+                size="sm"
+                className="h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs"
+                onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
+              >
+                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
+                Pegar
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-green-500/10 hover:border-green-500/50"
+                onClick={handleShareWhatsApp}
+                title="Compartilhar no WhatsApp"
+              >
+                <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-500" />
+              </Button>
             </div>
           </div>
-        </ScrollArea>
+
+          {/* Thermometer */}
+          <Thermometer
+            temperature={product.temperature}
+            hotVotes={product.hot_votes}
+            coldVotes={product.cold_votes}
+            onVoteHot={() => onVoteHot(product.id)}
+            onVoteCold={() => onVoteCold(product.id)}
+            size="sm"
+          />
+
+          {/* Specs - only show on larger screens */}
+          {product.specs && Object.keys(product.specs).length > 0 && (
+            <div className="hidden sm:block">
+              <Separator className="bg-border/50 my-2" />
+              <h4 className="text-[10px] md:text-xs font-semibold mb-1">Especificações</h4>
+              <div className="grid grid-cols-2 gap-1">
+                {Object.entries(product.specs).slice(0, 4).map(([key, value]) => (
+                  <div key={key} className="rounded bg-surface-elevated px-1.5 py-0.5">
+                    <div className="text-[8px] md:text-[9px] text-muted-foreground">{key}</div>
+                    <div className="font-medium text-[9px] md:text-[10px]">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          <Separator className="bg-border/50" />
+          <div>
+            <h4 className="text-[10px] sm:text-xs font-semibold mb-1.5 flex items-center gap-1">
+              <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              Comentários ({comments.length})
+            </h4>
+
+            {/* Add Comment */}
+            <div className="flex gap-1 sm:gap-1.5 mb-1.5">
+              <Input
+                placeholder="Comentar..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
+                className="bg-surface-elevated border-border/50 text-[10px] sm:text-xs h-6 sm:h-7"
+              />
+              <Button
+                variant="default"
+                size="icon"
+                onClick={handleSubmitComment}
+                disabled={!newComment.trim()}
+                className="h-6 w-6 sm:h-7 sm:w-7 shrink-0"
+              >
+                <Send className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              </Button>
+            </div>
+
+            {/* Comments List - limited to 3 visible */}
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {comments.length === 0 ? (
+                <p className="text-center text-muted-foreground text-[9px] sm:text-[10px] py-1.5">
+                  Seja o primeiro a comentar!
+                </p>
+              ) : (
+                comments.slice(0, 5).map((comment) => {
+                  const canDelete = isAdmin || (user && user.id === comment.user_id);
+                  return (
+                    <div key={comment.id} className="rounded bg-surface-elevated p-1 sm:p-1.5 group">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <User className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-primary" />
+                        </div>
+                        <span className="font-medium text-[9px] sm:text-[10px] truncate">
+                          {comment.profile?.username || 'Usuário'}
+                        </span>
+                        {isAdmin && comment.user_id !== user?.id && (
+                          <Badge variant="outline" className="text-[7px] h-3 px-1 text-primary border-primary/30">
+                            Admin
+                          </Badge>
+                        )}
+                        <span className="text-[8px] sm:text-[9px] text-muted-foreground ml-auto shrink-0">
+                          {formatDate(comment.created_at)}
+                        </span>
+                        {canDelete && onDeleteComment && (
+                          <button
+                            onClick={() => onDeleteComment(comment.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded"
+                            title="Excluir comentário"
+                          >
+                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-destructive" />
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[9px] sm:text-[10px] line-clamp-2">{comment.content}</p>
+                    </div>
+                  );
+                })
+              )}
+              {comments.length > 5 && (
+                <p className="text-center text-muted-foreground text-[9px] sm:text-[10px]">
+                  +{comments.length - 5} comentários
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

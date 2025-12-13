@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/services/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface DbProduct {
@@ -18,6 +18,7 @@ export interface DbProduct {
   store: string;
   specs: Record<string, string>;
   is_active: boolean;
+  coupon_code: string | null;
   created_at: string;
   updated_at: string;
   categories?: {
@@ -38,6 +39,7 @@ export interface ProductFormData {
   store: string;
   specs: Record<string, string>;
   is_active: boolean;
+  coupon_code: string | null;
 }
 
 export function useProducts() {
@@ -82,6 +84,8 @@ export function useActiveProducts() {
       if (error) throw error;
       return data as DbProduct[];
     },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 }
 

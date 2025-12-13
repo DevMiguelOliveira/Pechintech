@@ -45,6 +45,18 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
         </div>
       </div>
 
+      {/* Home Button */}
+      <div className="p-3 border-b border-border">
+        <NavLink
+          to="/"
+          onClick={onNavigate}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors w-full"
+        >
+          <Home className="w-5 h-5" />
+          Home
+        </NavLink>
+      </div>
+
       {/* Navigation */}
       <ScrollArea className="flex-1 p-3">
         <nav className="space-y-1">
@@ -71,15 +83,7 @@ const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
       </ScrollArea>
 
       {/* Footer */}
-      <div className="p-3 border-t border-border space-y-1">
-        <NavLink
-          to="/"
-          onClick={onNavigate}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <Home className="w-5 h-5" />
-          Voltar ao site
-        </NavLink>
+      <div className="p-3 border-t border-border">
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
@@ -104,21 +108,30 @@ const AdminLayout = () => {
 
       {/* Mobile Header & Sheet */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden flex items-center gap-4 p-4 border-b border-border bg-card">
-          <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
-              <SidebarContent onNavigate={() => setIsMobileOpen(false)} />
-            </SheetContent>
-          </Sheet>
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-primary" />
-            <span className="font-display font-bold text-primary">Admin</span>
+        <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
+          <div className="flex items-center gap-4">
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <SidebarContent onNavigate={() => setIsMobileOpen(false)} />
+              </SheetContent>
+            </Sheet>
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-primary" />
+              <span className="font-display font-bold text-primary">Admin</span>
+            </div>
           </div>
+          <NavLink
+            to="/"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            Home
+          </NavLink>
         </header>
 
         {/* Main Content */}

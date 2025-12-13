@@ -141,7 +141,7 @@ export function ProductDetailModal({
                 onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
               >
                 <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                Pegar
+                Pegar Promoção!
               </Button>
               <Button
                 variant="outline"

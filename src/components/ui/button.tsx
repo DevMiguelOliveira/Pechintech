@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-surface-elevated hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        neon: "relative overflow-hidden bg-gradient-to-r from-primary via-primary/90 to-primary text-primary-foreground shadow-lg animate-neon-pulse hover:shadow-[0_0_25px_hsl(var(--neon-orange)/0.5)] hover:scale-[1.02] before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:translate-x-[-200%] before:animate-shine before:pointer-events-none",
+        neon: "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-[0_0_20px_hsl(var(--neon-orange)/0.4)] hover:scale-[1.02] transition-all duration-200",
         cyber: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg hover:shadow-[0_0_20px_hsl(var(--cyber-blue)/0.4)] hover:scale-105",
         hot: "bg-gradient-to-r from-[hsl(var(--neon-orange))] to-[hsl(var(--hot-red))] text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105",
         cold: "bg-gradient-to-r from-[hsl(var(--cold-blue))] to-[hsl(var(--cyber-blue))] text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105",

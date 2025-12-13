@@ -89,14 +89,19 @@ export function ProductCard({
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
+  const handleCardClick = () => {
+    onOpenDetails(product);
+  };
+
   return (
     <article
       className={cn(
-        'group relative flex flex-col rounded-xl bg-card overflow-hidden',
+        'group relative flex flex-col rounded-xl bg-card overflow-hidden cursor-pointer',
         'border border-border/50 transition-all duration-300',
         'hover:border-primary/30 hover:shadow-xl hover:-translate-y-1',
         'card-glow'
       )}
+      onClick={handleCardClick}
     >
       {/* Discount Badge */}
       {discount > 0 && (
@@ -127,10 +132,7 @@ export function ProductCard({
       </Button>
 
       {/* Product Image */}
-      <div
-        className="relative h-32 sm:h-36 md:h-40 overflow-hidden cursor-pointer bg-muted/30"
-        onClick={() => onOpenDetails(product)}
-      >
+      <div className="relative h-32 sm:h-36 md:h-40 overflow-hidden bg-muted/30">
         <img
           src={product.image_url}
           alt={product.title}
@@ -157,10 +159,7 @@ export function ProductCard({
         </div>
 
         {/* Title */}
-        <h3
-          className="font-semibold text-xs md:text-sm line-clamp-2 cursor-pointer hover:text-primary transition-colors leading-tight"
-          onClick={() => onOpenDetails(product)}
-        >
+        <h3 className="font-semibold text-xs md:text-sm line-clamp-2 hover:text-primary transition-colors leading-tight">
           {product.title}
         </h3>
 
@@ -220,7 +219,10 @@ export function ProductCard({
           <Button
             variant="neon"
             className="w-full text-[10px] sm:text-xs h-8 sm:h-9 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
+            }}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
             <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mr-1" aria-hidden="true" />
@@ -229,16 +231,10 @@ export function ProductCard({
           
           {/* Secondary Actions */}
           <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              onClick={() => onOpenDetails(product)}
-              aria-label={`Ver detalhes e comentários de ${product.title}`}
-            >
-              <MessageCircle className="h-3 w-3 mr-1" aria-hidden="true" />
-              {product.comments_count}
-            </Button>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <MessageCircle className="h-3 w-3" aria-hidden="true" />
+              <span className="text-[9px] sm:text-[10px]">{product.comments_count}</span>
+            </div>
             <Button
               variant="outline"
               size="sm"

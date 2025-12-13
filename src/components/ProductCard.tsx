@@ -215,37 +215,36 @@ export function ProductCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 md:gap-1.5 mt-auto pt-1">
+        <div className="flex items-center gap-1 mt-auto pt-1">
           <Button
             variant="neon"
-            className="flex-1 text-[10px] md:text-sm h-8 md:h-9 px-2 md:px-3 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="flex-1 text-[9px] sm:text-[10px] md:text-xs h-7 sm:h-8 px-1.5 sm:px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
-            <ExternalLink className="h-3 w-3 md:h-4 md:w-4 shrink-0" aria-hidden="true" />
-            <span className="hidden xs:inline">Pegar</span>
-            <span className="xs:hidden">Ir</span>
+            <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 mr-0.5" aria-hidden="true" />
+            Pegar
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-8 w-8 md:h-9 md:w-9 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={() => onOpenDetails(product)}
             aria-label={`Ver detalhes e comentários de ${product.title}`}
           >
-            <MessageCircle className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
+            <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
           </Button>
-          <span className="text-[10px] md:text-xs text-muted-foreground min-w-[12px]">
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground w-4 text-center">
             {product.comments_count}
           </span>
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-8 w-8 md:h-9 md:w-9 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50"
+            className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50"
             onClick={handleShareWhatsApp}
             aria-label={`Compartilhar ${product.title} no WhatsApp`}
           >
-            <Share2 className="h-3 w-3 md:h-4 md:w-4 text-green-500" aria-hidden="true" />
+            <Share2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-500" aria-hidden="true" />
           </Button>
         </div>
       </div>

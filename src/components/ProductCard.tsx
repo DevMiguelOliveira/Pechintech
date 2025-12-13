@@ -215,37 +215,41 @@ export function ProductCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 mt-auto pt-1">
+        <div className="flex flex-col gap-1.5 mt-auto pt-1">
+          {/* Main Button */}
           <Button
             variant="neon"
-            className="flex-1 text-[9px] sm:text-[10px] md:text-xs h-7 sm:h-8 px-1.5 sm:px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="w-full text-[10px] sm:text-xs h-8 sm:h-9 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
-            <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 mr-0.5" aria-hidden="true" />
-            Pegar
+            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mr-1" aria-hidden="true" />
+            Pegar Promoção!
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            onClick={() => onOpenDetails(product)}
-            aria-label={`Ver detalhes e comentários de ${product.title}`}
-          >
-            <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
-          </Button>
-          <span className="text-[9px] sm:text-[10px] text-muted-foreground w-4 text-center">
-            {product.comments_count}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50"
-            onClick={handleShareWhatsApp}
-            aria-label={`Compartilhar ${product.title} no WhatsApp`}
-          >
-            <Share2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-500" aria-hidden="true" />
-          </Button>
+          
+          {/* Secondary Actions */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              onClick={() => onOpenDetails(product)}
+              aria-label={`Ver detalhes e comentários de ${product.title}`}
+            >
+              <MessageCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+              {product.comments_count}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
+              onClick={handleShareWhatsApp}
+              aria-label={`Compartilhar ${product.title} no WhatsApp`}
+            >
+              <Share2 className="h-3 w-3 mr-1" aria-hidden="true" />
+              Compartilhar
+            </Button>
+          </div>
         </div>
       </div>
     </article>

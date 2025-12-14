@@ -39,11 +39,11 @@ export function Thermometer({
 
   const sizeClasses = {
     sm: {
-      container: 'gap-1',
-      temp: 'text-lg font-bold',
-      bar: 'h-1.5',
-      button: 'h-7 w-7',
-      icon: 'h-3 w-3',
+      container: 'gap-0.5',
+      temp: 'text-sm sm:text-base font-bold',
+      bar: 'h-1',
+      button: 'h-6 w-6',
+      icon: 'h-2.5 w-2.5',
     },
     md: {
       container: 'gap-2',
@@ -66,11 +66,11 @@ export function Thermometer({
   return (
     <div className={cn('flex flex-col', styles.container)}>
       {/* Temperature Display */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <span className={cn(styles.temp, getTemperatureColor())}>
           {temperature}°
         </span>
-        <span className="text-xs text-muted-foreground">{getTemperatureLabel()}</span>
+        <span className="text-[9px] sm:text-[10px] text-muted-foreground">{getTemperatureLabel()}</span>
       </div>
 
       {/* Temperature Bar */}
@@ -104,13 +104,13 @@ export function Thermometer({
           >
             <Flame className={styles.icon} aria-hidden="true" />
           </Button>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-live="polite" aria-atomic="true">
-            <span className="flex items-center gap-1">
-              <Flame className="h-3 w-3 text-temperature-hot" aria-hidden="true" />
+          <div className="flex items-center gap-2 text-[9px] sm:text-[10px] text-muted-foreground" aria-live="polite" aria-atomic="true">
+            <span className="flex items-center gap-0.5">
+              <Flame className="h-2.5 w-2.5 text-temperature-hot" aria-hidden="true" />
               <span aria-label={`${hotVotes} votos quentes`}>{hotVotes}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <Snowflake className="h-3 w-3 text-temperature-cold" aria-hidden="true" />
+            <span className="flex items-center gap-0.5">
+              <Snowflake className="h-2.5 w-2.5 text-temperature-cold" aria-hidden="true" />
               <span aria-label={`${coldVotes} votos frios`}>{coldVotes}</span>
             </span>
           </div>

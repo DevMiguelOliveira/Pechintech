@@ -125,14 +125,14 @@ export function ProductCard({
         'group relative flex flex-col rounded-xl bg-card overflow-hidden cursor-pointer',
         'border border-border/50 transition-all duration-300',
         'hover:border-primary/30 hover:shadow-xl hover:-translate-y-1',
-        'card-glow'
+        'card-glow h-full'
       )}
       onClick={handleCardClick}
     >
       {/* Discount Badge */}
       {discount > 0 && (
         <Badge
-          className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground font-bold shadow-lg"
+          className="absolute top-2 left-2 z-10 bg-primary text-primary-foreground font-bold shadow-lg text-[10px] px-1.5 py-0.5"
         >
           -{discount}%
         </Badge>
@@ -143,9 +143,10 @@ export function ProductCard({
         variant="ghost"
         size="icon-sm"
         className={cn(
-          'absolute top-3 right-3 z-10 rounded-full bg-background/80 backdrop-blur-sm',
+          'absolute top-2 right-2 z-10 rounded-full bg-background/80 backdrop-blur-sm',
           'hover:bg-background hover:scale-110 transition-all',
           'focus:ring-2 focus:ring-primary focus:ring-offset-2',
+          'h-7 w-7',
           isFavorite && 'text-primary'
         )}
         onClick={(e) => {
@@ -154,11 +155,11 @@ export function ProductCard({
         }}
         aria-label={isFavorite ? `Remover ${product.title} dos favoritos` : `Adicionar ${product.title} aos favoritos`}
       >
-        <Heart className={cn('h-4 w-4', isFavorite && 'fill-current')} aria-hidden="true" />
+        <Heart className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} aria-hidden="true" />
       </Button>
 
       {/* Product Image */}
-      <div className="relative h-32 sm:h-36 md:h-40 overflow-hidden bg-muted/30">
+      <div className="relative aspect-square max-h-36 sm:max-h-40 overflow-hidden bg-muted/30">
         <img
           src={product.image_url}
           alt={product.title}
@@ -172,29 +173,29 @@ export function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-3 md:p-4 gap-2 md:gap-3">
+      <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1.5 sm:gap-2">
         {/* Store Badge */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Badge variant="outline" className="text-[10px] md:text-xs font-normal">
-            <Store className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+        <div className="flex items-center gap-1 flex-wrap">
+          <Badge variant="outline" className="text-[9px] sm:text-[10px] font-normal px-1.5 py-0">
+            <Store className="h-2.5 w-2.5 mr-0.5" />
             {product.store}
           </Badge>
-          <Badge variant="secondary" className="text-[10px] md:text-xs font-normal capitalize">
+          <Badge variant="secondary" className="text-[9px] sm:text-[10px] font-normal capitalize px-1.5 py-0">
             {product.category}
           </Badge>
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-xs md:text-sm line-clamp-2 hover:text-primary transition-colors leading-tight">
+        <h3 className="font-semibold text-[11px] sm:text-xs line-clamp-2 hover:text-primary transition-colors leading-snug min-h-[2.5em]">
           {product.title}
         </h3>
 
         {/* Price */}
-        <div className="flex flex-col gap-0">
-          <span className="text-[10px] md:text-xs text-muted-foreground line-through">
+        <div className="flex flex-col">
+          <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through leading-none">
             {formatPrice(product.original_price)}
           </span>
-          <span className="text-base md:text-xl font-bold text-primary">
+          <span className="text-sm sm:text-lg font-bold text-primary leading-tight">
             {formatPrice(product.current_price)}
           </span>
         </div>
@@ -209,63 +210,60 @@ export function ProductCard({
           size="sm"
         />
 
-        {/* Coupon & Date Section */}
-        <div className="space-y-1.5 pt-1">
+        {/* Date & Actions - Pushed to bottom */}
+        <div className="flex flex-col gap-1.5 mt-auto">
           {/* Coupon Code */}
           {product.coupon_code && (
             <button
               onClick={handleCopyCoupon}
               className={cn(
-                "w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md",
+                "w-full flex items-center justify-between gap-1 px-2 py-1 rounded-md",
                 "bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors",
-                "text-[10px] md:text-xs font-medium"
+                "text-[9px] sm:text-[10px] font-medium"
               )}
             >
               <span className="text-muted-foreground">Cupom:</span>
-              <span className="font-mono font-bold text-primary uppercase tracking-wider">
+              <span className="font-mono font-bold text-primary uppercase tracking-wider truncate max-w-[80px]">
                 {product.coupon_code}
               </span>
               {copied ? (
-                <Check className="h-3 w-3 text-green-500 shrink-0" />
+                <Check className="h-2.5 w-2.5 text-green-500 shrink-0" />
               ) : (
-                <Copy className="h-3 w-3 text-muted-foreground shrink-0" />
+                <Copy className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
               )}
             </button>
           )}
           
           {/* Published Date */}
-          <p className="text-[9px] md:text-[10px] text-muted-foreground text-center leading-tight">
+          <p className="text-[8px] sm:text-[9px] text-muted-foreground text-center leading-tight">
             Publicado em {formatDate(product.created_at)}. Valores sujeitos a alteração.
           </p>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-1.5 mt-auto pt-1">
           {/* Main Button */}
           <Button
             variant="neon"
-            className="w-full text-[10px] sm:text-xs h-8 sm:h-9 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            className="w-full text-[9px] sm:text-[10px] h-7 sm:h-8 px-2 focus:ring-2 focus:ring-primary focus:ring-offset-2"
             onClick={handlePromoClick}
             aria-label={`Ver oferta de ${product.title} na ${product.store}`}
           >
-            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mr-1" aria-hidden="true" />
+            <ExternalLink className="h-3 w-3 shrink-0 mr-1" aria-hidden="true" />
             Pegar Promoção!
           </Button>
           
           {/* Secondary Actions */}
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MessageCircle className="h-3 w-3" aria-hidden="true" />
-              <span className="text-[9px] sm:text-[10px]">{product.comments_count}</span>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="flex items-center gap-0.5 text-muted-foreground">
+              <MessageCircle className="h-2.5 w-2.5" aria-hidden="true" />
+              <span className="text-[8px] sm:text-[9px]">{product.comments_count}</span>
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-[9px] sm:text-[10px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
+              className="h-6 px-1.5 text-[8px] sm:text-[9px] focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-500/10 hover:border-green-500/50 text-green-500"
               onClick={handleShareWhatsApp}
               aria-label={`Compartilhar ${product.title} no WhatsApp`}
             >
-              <Share2 className="h-3 w-3 mr-1" aria-hidden="true" />
+              <Share2 className="h-2.5 w-2.5 mr-0.5" aria-hidden="true" />
               Compartilhar
             </Button>
           </div>

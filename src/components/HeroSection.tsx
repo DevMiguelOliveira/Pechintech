@@ -45,7 +45,7 @@ export function HeroSection({
         </div>
 
         {/* Featured Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {trendingProducts.slice(0, 4).map((product) => (
             <ProductCard
               key={product.id}

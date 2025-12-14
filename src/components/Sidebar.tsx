@@ -74,6 +74,7 @@ export function Sidebar({
     <aside
       className={cn(
         'w-64 shrink-0 border-r border-border/50 bg-sidebar hidden lg:block',
+        'fixed top-16 left-0 z-30',
         className
       )}
     >

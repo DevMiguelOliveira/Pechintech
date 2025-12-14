@@ -23,16 +23,16 @@ CREATE POLICY "Anyone can insert page views"
   TO anon, authenticated
   WITH CHECK (true);
 
--- Política: Apenas admins podem visualizar
+-- Política: Apenas admins podem visualizar (usando tabela user_roles)
 CREATE POLICY "Admins can view page views"
   ON page_views
   FOR SELECT
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
+      SELECT 1 FROM user_roles
+      WHERE user_roles.user_id = auth.uid()
+      AND user_roles.role = 'admin'
     )
   );
 

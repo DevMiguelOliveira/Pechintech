@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { usePageViewStats, usePageViewsByDay } from '@/hooks/usePageViews';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,8 @@ import {
   Activity,
   Calendar,
   Store,
+  Users,
+  Globe,
 } from 'lucide-react';
 import { format, subDays, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -124,6 +127,8 @@ const StatCard = ({
 const Analytics = () => {
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: pageViewStats, isLoading: pageViewsLoading } = usePageViewStats();
+  const { data: pageViewsByDay } = usePageViewsByDay(7);
   const [period, setPeriod] = useState('7d');
 
   const isLoading = productsLoading || categoriesLoading;
@@ -263,6 +268,70 @@ const Analytics = () => {
           </Button>
         </div>
       </div>
+
+      {/* Tráfego do Site */}
+      <Card className="border-green-500/20 bg-green-500/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Globe className="h-5 w-5 text-green-500" />
+            Tráfego do Site
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="text-center p-3 rounded-lg bg-background">
+              {pageViewsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto" />
+              ) : (
+                <p className="text-2xl font-bold text-green-500">
+                  {pageViewStats?.total_views?.toLocaleString('pt-BR') ?? 0}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Total de Visitas</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-background">
+              {pageViewsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto" />
+              ) : (
+                <p className="text-2xl font-bold text-blue-500">
+                  {pageViewStats?.unique_visitors?.toLocaleString('pt-BR') ?? 0}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Visitantes Únicos</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-background">
+              {pageViewsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto" />
+              ) : (
+                <p className="text-2xl font-bold text-orange-500">
+                  {pageViewStats?.views_today?.toLocaleString('pt-BR') ?? 0}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Visitas Hoje</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-background">
+              {pageViewsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto" />
+              ) : (
+                <p className="text-2xl font-bold text-purple-500">
+                  {pageViewStats?.views_this_week?.toLocaleString('pt-BR') ?? 0}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Esta Semana</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-background">
+              {pageViewsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto" />
+              ) : (
+                <p className="text-2xl font-bold text-cyan-500">
+                  {pageViewStats?.views_this_month?.toLocaleString('pt-BR') ?? 0}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Este Mês</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Grid */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

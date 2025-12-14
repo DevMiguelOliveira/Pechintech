@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVote } from '@/hooks/useVotes';
 import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { useComments, useAddComment, useDeleteComment } from '@/hooks/useComments';
+import { useTrackPageView } from '@/hooks/usePageViews';
 import { Product, Category, SortOption } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,6 +43,9 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: dbProducts, isLoading } = useActiveProducts();
+  
+  // Rastrear visita na página
+  useTrackPageView('/');
   
   const products = useMemo(() => {
     if (!dbProducts) return [];

@@ -255,6 +255,33 @@ export type Database = {
           },
         ]
       }
+      page_views: {
+        Row: {
+          id: string
+          visitor_id: string
+          page_path: string
+          user_agent: string | null
+          referrer: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          visitor_id: string
+          page_path?: string
+          user_agent?: string | null
+          referrer?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          visitor_id?: string
+          page_path?: string
+          user_agent?: string | null
+          referrer?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

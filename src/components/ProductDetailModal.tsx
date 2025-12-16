@@ -76,7 +76,7 @@ export function ProductDetailModal({
     }
     
     message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
-    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_`;
+    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_`+"https://www.pechintech.com.br" ;
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');

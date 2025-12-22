@@ -114,19 +114,19 @@ export function ProductDetailModal({
           </div>
 
           {/* Title */}
-          <DialogTitle className="text-xs sm:text-sm md:text-base font-bold leading-tight line-clamp-2">
+          <DialogTitle className="text-sm sm:text-base md:text-lg font-bold leading-tight line-clamp-2">
             {product.title}
           </DialogTitle>
 
           {/* Description */}
-          <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground line-clamp-2">
+          <p className="text-[11px] sm:text-sm md:text-base text-muted-foreground line-clamp-2">
             {product.description}
           </p>
 
           {/* Price & Buttons */}
           <div className="flex items-center justify-between gap-2">
             <div>
-              <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground line-through block">
+              <span className="text-[10px] sm:text-[11px] md:text-sm text-muted-foreground line-through block">
                 {formatPrice(product.original_price)}
               </span>
               <span className="text-base sm:text-lg md:text-xl font-bold text-primary">
@@ -137,7 +137,7 @@ export function ProductDetailModal({
               <Button
                 variant="neon"
                 size="sm"
-                className="h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs"
+                className="h-7 sm:h-8 px-2 sm:px-3 text-[11px] sm:text-sm"
                 onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
               >
                 <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
@@ -184,7 +184,7 @@ export function ProductDetailModal({
           {/* Comments Section */}
           <Separator className="bg-border/50" />
           <div>
-            <h4 className="text-[10px] sm:text-xs font-semibold mb-1.5 flex items-center gap-1">
+            <h4 className="text-[11px] sm:text-sm font-semibold mb-1.5 flex items-center gap-1">
               <MessageCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               Comentários ({comments.length})
             </h4>
@@ -196,7 +196,7 @@ export function ProductDetailModal({
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitComment()}
-                className="bg-surface-elevated border-border/50 text-[10px] sm:text-xs h-7 sm:h-8"
+                className="bg-surface-elevated border-border/50 text-[11px] sm:text-sm h-7 sm:h-8"
               />
               <Button
                 variant="default"
@@ -212,7 +212,7 @@ export function ProductDetailModal({
             {/* Comments List - limited to 3 visible */}
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {comments.length === 0 ? (
-                <p className="text-center text-muted-foreground text-[9px] sm:text-[10px] py-1.5">
+                <p className="text-center text-muted-foreground text-[10px] sm:text-[11px] py-1.5">
                   Seja o primeiro a comentar!
                 </p>
               ) : (
@@ -245,7 +245,7 @@ export function ProductDetailModal({
                           </button>
                         )}
                       </div>
-                      <p className="text-[9px] sm:text-[10px] line-clamp-2">{comment.content}</p>
+                      <p className="text-[10px] sm:text-[11px] line-clamp-2">{comment.content}</p>
                     </div>
                   );
                 })

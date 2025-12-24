@@ -12,10 +12,13 @@ import { trackPageView } from "@/services/analytics";
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Products = lazy(() => import("./pages/admin/Products"));
 const Categories = lazy(() => import("./pages/admin/Categories"));
+const BlogPosts = lazy(() => import("./pages/admin/BlogPosts"));
 const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -65,6 +68,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route
                 path="/admin"
                 element={
@@ -76,6 +81,7 @@ const App = () => (
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
                 <Route path="categories" element={<Categories />} />
+                <Route path="blog" element={<BlogPosts />} />
                 <Route path="analytics" element={<Analytics />} />
               </Route>
               <Route path="*" element={<NotFound />} />

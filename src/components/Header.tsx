@@ -53,6 +53,13 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Blog Link */}
+          <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+            <Link to="/blog">
+              Blog
+            </Link>
+          </Button>
+
           {/* Admin Link */}
           {isAdmin && (
             <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
@@ -118,6 +125,13 @@ export function Header({ onOpenFavorites, searchQuery, onSearchChange, favorites
         )}
       >
         <div className="container py-4 space-y-3">
+          {/* Blog Link Mobile */}
+          <Button variant="outline" className="w-full" asChild>
+            <Link to="/blog">
+              Blog
+            </Link>
+          </Button>
+
           {/* Admin Link Mobile */}
           {isAdmin && (
             <Button variant="outline" className="w-full" asChild>

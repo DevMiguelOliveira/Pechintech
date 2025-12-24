@@ -14,6 +14,7 @@ import {
   Home,
   ChevronLeft,
   BarChart3,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/admin/products', icon: Package, label: 'Produtos' },
   { to: '/admin/categories', icon: FolderTree, label: 'Categorias' },
+  { to: '/admin/blog', icon: FileText, label: 'Blog' },
   { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
 ];
 

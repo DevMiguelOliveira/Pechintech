@@ -1,10 +1,20 @@
 /**
  * Serviço de integração com Google Gemini API
  * Gera conteúdo de blog posts baseado em produtos
+ * 
+ * NOTA: Este serviço usa a API REST diretamente porque:
+ * - O SDK oficial (@google/generative-ai) é projetado para Node.js/backend
+ * - No frontend (React/Vite), precisamos usar fetch() para chamadas HTTP
+ * - A API REST funciona perfeitamente no navegador e é a abordagem recomendada
+ * 
+ * Documentação oficial: https://ai.google.dev/gemini-api/docs
+ * Modelo usado: gemini-2.5-flash (mais recente e rápido)
  */
 
-// Usando a versão mais recente da API (gemini-1.5-flash ou gemini-1.5-pro)
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Usando a versão mais recente da API (gemini-2.5-flash conforme documentação oficial)
+// Para frontend, usamos a API REST diretamente (o SDK oficial é para Node.js)
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
+const GEMINI_MODEL = 'gemini-2.5-flash'; // Modelo mais recente conforme documentação oficial
 
 /**
  * Função para obter a API Key de forma mais robusta
@@ -92,7 +102,16 @@ PRODUTO:
 Gere o conteúdo completo do artigo em Markdown, sendo detalhado e informativo.`;
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    // Usando a API REST oficial do Google Gemini
+    // Formato: https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}
+    const apiUrl = `${GEMINI_API_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    
+    console.log('[Gemini] Enviando requisição para:', {
+      model: GEMINI_MODEL,
+      url: apiUrl.replace(apiKey, '***'),
+    });
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +142,7 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado e informativo.`
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        url: GEMINI_API_URL,
+        model: GEMINI_MODEL,
       });
       throw new Error(errorMessage);
     }
@@ -252,7 +271,15 @@ ${keywordsText}
 Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e bem estruturado.`;
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    // Usando a API REST oficial do Google Gemini
+    const apiUrl = `${GEMINI_API_BASE_URL}/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    
+    console.log('[Gemini] Enviando requisição para conteúdo genérico:', {
+      model: GEMINI_MODEL,
+      title: request.title,
+    });
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

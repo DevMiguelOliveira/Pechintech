@@ -13,7 +13,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import MDEditor from '@uiw/react-md-editor';
 import { useForm } from 'react-hook-form';
 
 const BlogPosts = () => {
@@ -298,17 +297,11 @@ const BlogPosts = () => {
             </div>
 
             <div>
-              <Label>Conteúdo</Label>
-              <MDEditor
-                value={watchedContent}
-                onChange={(value) => setValue('content', value || '')}
-                preview="edit"
-                hideToolbar={false}
-                visibleDragBar={false}
-                data-color-mode="light"
-              />
-              {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
-            </div>
+              <Label>Conteúdo (Markdown)</Label>
+              <Textarea
+                {...register('content', { required: 'Conteúdo é obrigatório' })}
+                placeholder="Escreva o conteúdo do post em Markdown..."
+                rows={10}
 
             <div className="flex items-center space-x-2">
               <Switch

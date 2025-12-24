@@ -7,7 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import MDEditor from '@uiw/react-md-editor';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -81,7 +82,7 @@ const BlogPost = () => {
         </CardHeader>
         <CardContent>
           <div className="prose prose-lg max-w-none dark:prose-invert">
-            <MDEditor.Markdown source={post.content} />
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
           </div>
         </CardContent>
       </Card>

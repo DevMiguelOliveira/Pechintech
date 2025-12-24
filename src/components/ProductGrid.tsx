@@ -36,21 +36,34 @@ export function ProductGrid({
   }
 
   return (
-    <section className="py-4 md:py-6">
+    <section className="py-6 md:py-8 lg:py-10">
       {title && (
-        <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">{title}</h2>
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            {title}
+          </h2>
+          <div className="h-1 w-20 bg-gradient-to-r from-primary to-primary/50 rounded-full" />
+        </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
-        {products.map((product) => (
-          <ProductCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6">
+        {products.map((product, index) => (
+          <div
             key={product.id}
-            product={product}
-            onOpenDetails={onOpenDetails}
-            onToggleFavorite={onToggleFavorite}
-            onVoteHot={onVoteHot}
-            onVoteCold={onVoteCold}
-            isFavorite={favorites.has(product.id)}
-          />
+            className="animate-in fade-in slide-in-from-bottom-4"
+            style={{
+              animationDelay: `${index * 50}ms`,
+              animationFillMode: 'both',
+            }}
+          >
+            <ProductCard
+              product={product}
+              onOpenDetails={onOpenDetails}
+              onToggleFavorite={onToggleFavorite}
+              onVoteHot={onVoteHot}
+              onVoteCold={onVoteCold}
+              isFavorite={favorites.has(product.id)}
+            />
+          </div>
         ))}
       </div>
     </section>

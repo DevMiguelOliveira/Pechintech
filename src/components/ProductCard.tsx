@@ -289,42 +289,41 @@ export function ProductCard({
           />
 
           {/* Footer - Trust Badge, Social Proof, Actions */}
-          <div className="flex flex-col gap-3">
-            {/* Trust Badge & Social Proof */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-1.5 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground/80 px-2 py-1 bg-muted/30 rounded-lg border border-border/30 leading-relaxed">
-                <Shield className="h-3 w-3 shrink-0" />
-                <span className="hidden sm:inline">Link afiliado • Ganhamos comissão sem custo extra</span>
-                <span className="sm:hidden">Link afiliado</span>
-              </div>
-              <div className="flex items-center gap-2 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <span className="font-semibold">{product.hot_votes + product.cold_votes} avaliações</span>
-                {discount >= 30 && (
-                  <Badge variant="outline" className="text-[0.625rem] px-2 py-0.5 bg-red-500/10 text-red-600 border-red-500/30 animate-pulse font-medium">
-                    ⚡ Oferta limitada
-                  </Badge>
-                )}
-              </div>
+          <div className="flex flex-col gap-2.5">
+            {/* Trust Badge - Uma linha completa */}
+            <div className="flex items-center gap-1.5 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground/80 px-2 py-1.5 bg-muted/30 rounded-lg border border-border/30 leading-relaxed w-full">
+              <Shield className="h-3 w-3 shrink-0" />
+              <span className="flex-1">Link afiliado • Ganhamos comissão sem custo extra</span>
             </div>
 
-            {/* Secondary Actions */}
-            <div className="flex items-center justify-between gap-3">
+            {/* Social Proof - Uma linha completa */}
+            <div className="flex items-center gap-2 text-[0.6875rem] sm:text-[0.75rem] text-muted-foreground w-full">
+              <Sparkles className="h-3 w-3 text-primary shrink-0" />
+              <span className="font-semibold flex-1">{product.hot_votes + product.cold_votes} avaliações</span>
+              {discount >= 30 && (
+                <Badge variant="outline" className="text-[0.625rem] px-2 py-0.5 bg-red-500/10 text-red-600 border-red-500/30 animate-pulse font-medium shrink-0">
+                  ⚡ Oferta limitada
+                </Badge>
+              )}
+            </div>
+
+            {/* Secondary Actions - Uma linha completa */}
+            <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/20">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" aria-hidden="true" />
                 <span className="text-[0.6875rem] sm:text-[0.75rem] font-medium">{product.comments_count}</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 text-[0.6875rem] sm:text-[0.75rem] hover:bg-green-500/10 hover:text-green-600 hover:border-green-500/30 border border-transparent hover:border transition-all font-medium"
+                className="h-8 px-3 text-[0.6875rem] sm:text-[0.75rem] hover:bg-green-500/10 hover:text-green-600 hover:border-green-500/30 border border-transparent hover:border transition-all font-medium shrink-0"
                 onClick={handleShare}
                 aria-label={`Compartilhar ${product.title}`}
               >
-                <Share2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                <Share2 className="h-3.5 w-3.5 mr-1.5 shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">Compartilhar</span>
               </Button>
-              <p className="text-[0.625rem] sm:text-[0.6875rem] text-muted-foreground/70 hidden lg:inline">
+              <p className="text-[0.625rem] sm:text-[0.6875rem] text-muted-foreground/70 hidden lg:inline shrink-0">
                 {formatDate(product.created_at)}
               </p>
             </div>

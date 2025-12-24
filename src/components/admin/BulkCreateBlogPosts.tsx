@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateBlogPost } from '@/hooks/useBlogPosts';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { supabase } from '@/services/supabase/client';
+import { Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function generateSlug(title: string): string {
   return title
@@ -788,18 +789,69 @@ Encontre o notebook gamer perfeito para levar seus jogos para qualquer lugar!`,
 export function BulkCreateBlogPosts() {
   const [isCreating, setIsCreating] = useState(false);
   const [results, setResults] = useState<Array<{ title: string; status: 'success' | 'error' | 'skipped'; message: string }>>([]);
+  const [tableExists, setTableExists] = useState<boolean | null>(null);
+  const [tableCheckError, setTableCheckError] = useState<string | null>(null);
   const createPost = useCreateBlogPost();
 
+  // Verificar se a tabela existe
+  useEffect(() => {
+    const checkTable = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('id')
+          .limit(1);
+
+        if (error) {
+          if (error.message.includes('Could not find the table') || error.message.includes('relation') || error.code === 'PGRST116') {
+            setTableExists(false);
+            setTableCheckError('A tabela blog_posts não existe no banco de dados. Execute as migrations do Supabase primeiro.');
+          } else {
+            setTableExists(false);
+            setTableCheckError(`Erro ao verificar tabela: ${error.message}`);
+          }
+        } else {
+          setTableExists(true);
+          setTableCheckError(null);
+        }
+      } catch (err) {
+        setTableExists(false);
+        setTableCheckError(err instanceof Error ? err.message : 'Erro desconhecido ao verificar tabela');
+      }
+    };
+
+    checkTable();
+  }, []);
+
   const handleBulkCreate = async () => {
+    if (!tableExists) {
+      toast({
+        title: 'Tabela não encontrada',
+        description: 'A tabela blog_posts não existe. Execute as migrations do Supabase primeiro.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsCreating(true);
     setResults([]);
 
     const newResults: Array<{ title: string; status: 'success' | 'error' | 'skipped'; message: string }> = [];
 
     // Verificar posts existentes
-    const { data: existingPosts } = await supabase
+    const { data: existingPosts, error: checkError } = await supabase
       .from('blog_posts')
       .select('slug');
+
+    if (checkError) {
+      toast({
+        title: 'Erro ao verificar posts existentes',
+        description: checkError.message,
+        variant: 'destructive',
+      });
+      setIsCreating(false);
+      return;
+    }
 
     const existingSlugs = new Set(existingPosts?.map(p => p.slug) || []);
 
@@ -830,10 +882,20 @@ export function BulkCreateBlogPosts() {
           message: 'Criado com sucesso',
         });
       } catch (error: any) {
+        let errorMessage = 'Erro ao criar';
+        
+        if (error?.message) {
+          if (error.message.includes('Could not find the table') || error.message.includes('relation') || error.code === 'PGRST116') {
+            errorMessage = 'Tabela blog_posts não existe. Execute as migrations.';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+
         newResults.push({
           title: template.title,
           status: 'error',
-          message: error.message || 'Erro ao criar',
+          message: errorMessage,
         });
       }
 
@@ -860,13 +922,37 @@ export function BulkCreateBlogPosts() {
         <CardTitle>Criar Posts em Lote</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {tableExists === false && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Tabela blog_posts não encontrada</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>{tableCheckError || 'A tabela blog_posts não existe no banco de dados.'}</p>
+              <div>
+                <strong className="block mb-2">Para corrigir:</strong>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Acesse o painel do Supabase: <a href="https://app.supabase.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">app.supabase.com</a></li>
+                  <li>Selecione seu projeto: <code className="bg-muted px-1 rounded text-xs">xphtkyghdsozrqyfpaij</code></li>
+                  <li>Vá em <strong>SQL Editor</strong> (menu lateral)</li>
+                  <li>Copie e cole o conteúdo do arquivo: <code className="bg-muted px-1 rounded text-xs">supabase/migrations/20251225000000_ensure_blog_posts_table.sql</code></li>
+                  <li>Clique em <strong>"Run"</strong> para executar o script</li>
+                  <li>Recarregue esta página após executar a migration</li>
+                </ol>
+              </div>
+              <div className="mt-3 p-2 bg-muted/50 rounded text-xs">
+                <strong>Dica:</strong> Se você já executou as migrations anteriormente, pode ser um problema de cache. Tente recarregar a página ou aguarde alguns segundos.
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <p className="text-sm text-muted-foreground">
           Este recurso cria automaticamente 10 posts de blog sobre produtos de tecnologia com conteúdo profissional e links para as promoções.
         </p>
 
         <Button
           onClick={handleBulkCreate}
-          disabled={isCreating}
+          disabled={isCreating || tableExists === false}
           className="w-full"
         >
           {isCreating ? (

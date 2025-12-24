@@ -14,6 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { trackPromoClick, trackCouponCopy, trackShare } from '@/services/analytics';
 import { shareProduct } from '@/utils/share';
+import { openAffiliateUrl } from '@/utils/urlValidator';
+import { sanitizeText, validateProductSlug } from '@/utils/security';
 import { useAuth } from '@/hooks/useAuth';
 import { useVote } from '@/hooks/useVotes';
 import { useComments, useAddComment } from '@/hooks/useComments';
@@ -34,6 +36,21 @@ const Product = () => {
   const addComment = useAddComment();
   const [newComment, setNewComment] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Validação de slug
+  if (slug && !validateProductSlug(slug)) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">URL inválida</h1>
+        <p className="text-[0.9375rem] sm:text-base text-muted-foreground mb-6 leading-relaxed">
+          A URL do produto não é válida.
+        </p>
+        <Button asChild>
+          <Link to="/">Voltar para Promoções</Link>
+        </Button>
+      </div>
+    );
+  }
 
   useTrackPageView(`/produto/${slug}`);
 
@@ -84,7 +101,8 @@ const Product = () => {
       price: Number(product.current_price),
       category: product.categories?.slug || 'hardware',
     });
-    window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
+    // Abre URL de forma segura com validação
+    openAffiliateUrl(product.affiliate_url);
   };
 
   const handleCopyCoupon = async () => {

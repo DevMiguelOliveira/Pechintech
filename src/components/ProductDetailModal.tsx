@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, MessageCircle, Send, User, Trash2, Share2, Shield, Copy } from 'lucide-react';
 import { BuyButton } from '@/components/BuyButton';
+import { openAffiliateUrl } from '@/utils/urlValidator';
+import { sanitizeText } from '@/utils/security';
 import { shareProduct } from '@/utils/share';
 import { trackShare } from '@/services/analytics';
 import {
@@ -153,7 +155,8 @@ export function ProductDetailModal({
                 price: product.current_price,
                 category: product.category,
               });
-              window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
+              // Abre URL de forma segura com validação
+              openAffiliateUrl(product.affiliate_url);
             }}
             size="lg"
             variant="modal"

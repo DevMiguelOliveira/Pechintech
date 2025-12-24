@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { sanitizeText, sanitizeHtml } from '@/utils/security';
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -131,7 +132,7 @@ const BlogPost = () => {
       <article itemScope itemType="https://schema.org/BlogPosting">
         <Card>
           <CardHeader>
-            <h1 className="text-3xl font-bold mb-4" itemProp="headline">{post.title}</h1>
+            <h1 className="text-3xl font-bold mb-4" itemProp="headline">{sanitizeText(post.title)}</h1>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
@@ -150,7 +151,7 @@ const BlogPost = () => {
           <CardContent>
             {post.excerpt && (
               <p className="text-lg text-muted-foreground mb-6" itemProp="description">
-                {post.excerpt}
+                {sanitizeText(post.excerpt)}
               </p>
             )}
             <div className="prose prose-lg max-w-none dark:prose-invert" itemProp="articleBody">

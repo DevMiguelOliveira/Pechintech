@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { trackPromoClick, trackCouponCopy, trackShare, trackProductView } from '@/services/analytics';
 import { shareProduct, generateProductSlug } from '@/utils/share';
+import { openAffiliateUrl } from '@/utils/urlValidator';
+import { sanitizeText } from '@/utils/security';
 
 interface ProductCardProps {
   product: Product;
@@ -106,7 +108,8 @@ export function ProductCard({
       price: product.current_price,
       category: product.category,
     });
-    window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
+    // Abre URL de forma segura com validação
+    openAffiliateUrl(product.affiliate_url);
   };
 
   const isHotDeal = discount >= 30 || product.temperature > 70;
@@ -194,30 +197,30 @@ export function ProductCard({
       <div className="flex flex-col flex-1 p-4 sm:p-5 lg:p-6 gap-3 sm:gap-4 relative z-10">
         {/* Header Section - Store, Category */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge 
-            variant="outline" 
-            className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 bg-background/80 backdrop-blur-sm border-primary/30"
-          >
-            <Store className="h-3 w-3 mr-1.5" />
-            {product.store}
-          </Badge>
-          <Badge 
-            variant="secondary" 
-            className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 capitalize bg-primary/10 text-primary border-primary/20"
-          >
-            {product.category}
-          </Badge>
+            <Badge 
+              variant="outline" 
+              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 bg-background/80 backdrop-blur-sm border-primary/30"
+            >
+              <Store className="h-3 w-3 mr-1.5" />
+              {sanitizeText(product.store)}
+            </Badge>
+            <Badge 
+              variant="secondary" 
+              className="text-[0.6875rem] sm:text-[0.75rem] font-semibold px-2.5 py-1 capitalize bg-primary/10 text-primary border-primary/20"
+            >
+              {sanitizeText(product.category)}
+            </Badge>
         </div>
 
-        {/* Title - SEO Optimized H3 */}
-        <h3 className="font-bold text-[0.9375rem] sm:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.4] group-hover:text-primary transition-colors duration-300">
-          {product.title}
-        </h3>
-        
-        {/* Description */}
-        <p className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.5]">
-          {product.description}
-        </p>
+          {/* Title - SEO Optimized H3 */}
+          <h3 className="font-bold text-[0.9375rem] sm:text-base lg:text-[1.0625rem] line-clamp-2 leading-[1.4] group-hover:text-primary transition-colors duration-300">
+            {sanitizeText(product.title)}
+          </h3>
+          
+          {/* Description */}
+          <p className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-[1.5]">
+            {sanitizeText(product.description)}
+          </p>
 
         {/* Price Section */}
         <div className="space-y-1.5 py-1">

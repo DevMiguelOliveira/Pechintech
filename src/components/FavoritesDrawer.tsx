@@ -1,4 +1,5 @@
 import { Heart, X, ExternalLink, Trash2 } from 'lucide-react';
+import { openAffiliateUrl } from '@/utils/urlValidator';
 import {
   Sheet,
   SheetContent,
@@ -91,7 +92,7 @@ export function FavoritesDrawer({
                         variant="neon"
                         size="sm"
                         className="h-7 text-xs"
-                        onClick={() => window.open(product.affiliate_url, '_blank')}
+                        onClick={() => openAffiliateUrl(product.affiliate_url)}
                       >
                         <ExternalLink className="h-3 w-3" />
                         Pegar

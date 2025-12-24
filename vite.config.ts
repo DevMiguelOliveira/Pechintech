@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: "esnext",
-      minify: "esbuild",
+      minify: isProduction ? "esbuild" : false,
       cssCodeSplit: true,
       rollupOptions: {
         output: {

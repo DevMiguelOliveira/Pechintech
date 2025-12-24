@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageCircle, ExternalLink, Store, Copy, Check, Share2, Sparkles, TrendingUp, Shield } from 'lucide-react';
+import { Heart, MessageCircle, Store, Copy, Check, Share2, Sparkles, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Thermometer } from '@/components/Thermometer';
+import { BuyButton } from '@/components/BuyButton';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { trackPromoClick, trackCouponCopy, trackShare, trackProductView } from '@/services/analytics';
+import { shareProduct, generateProductSlug } from '@/utils/share';
 
 interface ProductCardProps {
   product: Product;
@@ -71,34 +73,15 @@ export function ProductCard({
     }
   };
 
-  const handleShareWhatsApp = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    const discount = Math.round(
-      ((product.original_price - product.current_price) / product.original_price) * 100
-    );
-    
-    let message = `🔥 *PROMOÇÃO IMPERDÍVEL!* 🔥\n\n`;
-    message += `*${product.title}*\n\n`;
-    message += `💰 De ~R$ ${product.original_price.toFixed(2)}~ por apenas:\n`;
-    message += `✅ *R$ ${product.current_price.toFixed(2)}* (-${discount}%)\n\n`;
-    message += `🏪 Loja: ${product.store}\n`;
-    
-    if (product.coupon_code) {
-      message += `🎫 Cupom: *${product.coupon_code}*\n`;
-    }
-    
-    message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
-    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_\n\n`;
-    message += `💬 Entre no nosso grupo para mais promoções:\n`;
-    message += `https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx`;
-    
     // Analytics: tracking de compartilhamento
-    trackShare(product.id, 'whatsapp');
+    trackShare(product.id, 'share');
     
-    // Abre o grupo do WhatsApp com a mensagem pré-formatada
-    const whatsappUrl = `https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx`;
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    await shareProduct(product, (method) => {
+      trackShare(product.id, method);
+    });
   };
   const handleCardClick = () => {
     // Analytics: tracking de visualização de produto
@@ -109,13 +92,7 @@ export function ProductCard({
       category: product.category,
     });
     // Navegar para página individual do produto (SEO friendly)
-    const productSlug = product.title.toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-') + '-' + product.id.slice(0, 8);
+    const productSlug = generateProductSlug(product);
     navigate(`/produto/${productSlug}`);
   };
   
@@ -312,40 +289,14 @@ export function ProductCard({
           <span>Link afiliado • Ganhamos comissão sem custo extra para você</span>
         </div>
 
-        {/* Main CTA Button - Conversion Optimized */}
-        <Button
-          variant="default"
-          className={cn(
-            "w-full h-12 sm:h-14 text-xs sm:text-sm font-black rounded-xl px-2 sm:px-4",
-            "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
-            "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
-            "shadow-2xl hover:shadow-green-500/50 hover:shadow-2xl",
-            "transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1",
-            "border-2 border-green-400/50 hover:border-green-300",
-            "group/cta relative overflow-hidden",
-            "text-white font-extrabold tracking-tight"
-          )}
+        {/* Main CTA Button - Padronizado */}
+        <BuyButton
+          discount={discount}
           onClick={handlePromoClick}
-          aria-label={`Comprar ${product.title} com desconto de ${discount}% na ${product.store}`}
-        >
-          <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
-            <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
-            <span className="font-black leading-tight text-center">
-              {discount >= 30 ? (
-                <>
-                  <span className="hidden sm:inline">🔥 COMPRAR COM DESCONTO</span>
-                  <span className="sm:hidden">🔥 COMPRAR</span>
-                </>
-              ) : (
-                'COMPRAR AGORA'
-              )}
-            </span>
-            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
-          </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
-          {/* Pulse animation for urgency */}
-          <div className="absolute inset-0 rounded-xl bg-green-400/20 animate-pulse opacity-0 group-hover/cta:opacity-100 transition-opacity" />
-        </Button>
+          size="md"
+          variant="card"
+          className="hover:-translate-y-1"
+        />
 
         {/* Urgency & Social Proof */}
         <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
@@ -370,8 +321,8 @@ export function ProductCard({
             variant="ghost"
             size="sm"
             className="h-8 px-3 text-xs hover:bg-green-500/10 hover:text-green-600 hover:border-green-500/30 border border-transparent hover:border transition-all"
-            onClick={handleShareWhatsApp}
-            aria-label={`Compartilhar ${product.title} no WhatsApp`}
+            onClick={handleShare}
+            aria-label={`Compartilhar ${product.title}`}
           >
             <Share2 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
             Compartilhar

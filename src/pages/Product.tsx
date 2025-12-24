@@ -2,7 +2,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, ExternalLink, Store, Share2, Copy, Check, Shield, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowLeft, Store, Share2, Copy, Check, Shield, Sparkles } from 'lucide-react';
+import { BuyButton } from '@/components/BuyButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { getProductStructuredData } from '@/config/seo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { trackPromoClick, trackCouponCopy, trackShare } from '@/services/analytics';
+import { shareProduct } from '@/utils/share';
 import { useAuth } from '@/hooks/useAuth';
 import { useVote } from '@/hooks/useVotes';
 import { useComments, useAddComment } from '@/hooks/useComments';
@@ -104,11 +106,12 @@ const Product = () => {
     }
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShare = async () => {
     if (!product) return;
-    // Abre diretamente o grupo do WhatsApp
-    trackShare(product.id, 'whatsapp');
-    window.open('https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx', '_blank', 'noopener,noreferrer');
+    trackShare(product.id, 'share');
+    await shareProduct(product, (method) => {
+      trackShare(product.id, method);
+    });
   };
 
   const handleAddComment = () => {
@@ -214,9 +217,9 @@ const Product = () => {
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Product Image */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <Card className="overflow-hidden">
-              <div className="aspect-square bg-muted/30 p-8 flex items-center justify-center">
+              <div className="aspect-square bg-muted/30 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
                 <img
                   src={product.image_url}
                   alt={product.title}
@@ -226,17 +229,17 @@ const Product = () => {
               </div>
             </Card>
             {discount > 0 && (
-              <Badge className="w-full justify-center text-lg font-black py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white">
-                <Sparkles className="h-5 w-5 mr-2" />
+              <Badge className="w-full justify-center text-sm sm:text-base lg:text-lg font-black py-2 sm:py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 -{discount}% DE DESCONTO
               </Badge>
             )}
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
               <Link to="/" className="hover:text-primary">Início</Link>
               <span>/</span>
               <Link to={`/?category=${product.categories?.slug || product.category}`} className="hover:text-primary capitalize">
@@ -247,44 +250,44 @@ const Product = () => {
             </div>
 
             {/* Title - H1 */}
-            <h1 className="text-3xl md:text-4xl font-black leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight">
               {product.title}
             </h1>
 
             {/* Description */}
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               {product.description}
             </p>
 
             {/* Store & Category */}
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-sm px-4 py-2">
-                <Store className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2">
+                <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 {product.store}
               </Badge>
-              <Badge variant="secondary" className="text-sm px-4 py-2 capitalize">
+              <Badge variant="secondary" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 capitalize">
                 {product.categories?.name || product.category}
               </Badge>
             </div>
 
             {/* Price Section */}
-            <div className="space-y-3 p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border-2 border-primary/20">
-              <div className="flex items-baseline gap-3">
-                <span className="text-xl text-muted-foreground line-through">
+            <div className="space-y-2 sm:space-y-3 p-4 sm:p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border-2 border-primary/20">
+              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                <span className="text-lg sm:text-xl text-muted-foreground line-through">
                   {formatPrice(Number(product.original_price))}
                 </span>
                 {savings > 0 && (
-                  <Badge className="bg-green-500/10 text-green-600 border-green-500/30">
+                  <Badge className="bg-green-500/10 text-green-600 border-green-500/30 text-xs sm:text-sm">
                     Economize {formatPrice(savings)}
                   </Badge>
                 )}
               </div>
-              <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-black text-primary">
+              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-primary">
                   {formatPrice(Number(product.current_price))}
                 </span>
                 {discount > 0 && (
-                  <span className="text-lg text-muted-foreground">
+                  <span className="text-sm sm:text-base lg:text-lg text-muted-foreground">
                     ou {formatPrice(Math.round(Number(product.current_price) / 12))}/mês
                   </span>
                 )}
@@ -292,50 +295,29 @@ const Product = () => {
             </div>
 
             {/* Trust Badge */}
-            <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-lg border border-border/30">
-              <Shield className="h-5 w-5 text-primary shrink-0" />
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-start gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/30">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 mt-0.5" />
+              <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 <strong>Link afiliado:</strong> Ganhamos uma pequena comissão quando você compra, sem custo adicional para você. Isso nos ajuda a manter o site gratuito e encontrar mais promoções.
               </span>
             </div>
 
-            {/* Main CTA */}
-            <Button
-              size="lg"
-              className={cn(
-                "w-full h-14 sm:h-16 text-sm sm:text-base md:text-lg font-black rounded-xl px-3 sm:px-4",
-                "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
-                "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
-                "shadow-2xl hover:shadow-green-500/50",
-                "text-white tracking-tight"
-              )}
+            {/* Main CTA - Padronizado */}
+            <BuyButton
+              discount={discount}
               onClick={handlePromoClick}
-            >
-              <span className="flex items-center justify-center gap-2 sm:gap-3">
-                <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
-                <span className="leading-tight text-center">
-                  {discount >= 30 ? (
-                    <>
-                      <span className="hidden md:inline">🔥 COMPRAR COM DESCONTO AGORA</span>
-                      <span className="hidden sm:inline md:hidden">🔥 COMPRAR COM DESCONTO</span>
-                      <span className="sm:hidden">🔥 COMPRAR</span>
-                    </>
-                  ) : (
-                    'COMPRAR AGORA'
-                  )}
-                </span>
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
-              </span>
-            </Button>
+              size="lg"
+              variant="page"
+            />
 
             {/* Coupon Code */}
             {product.coupon_code && (
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold mb-1">Cupom de Desconto</p>
-                      <p className="text-2xl font-black font-mono text-primary uppercase">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold mb-1">Cupom de Desconto</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono text-primary uppercase break-all">
                         {product.coupon_code}
                       </p>
                     </div>
@@ -343,16 +325,16 @@ const Product = () => {
                       onClick={handleCopyCoupon}
                       variant="outline"
                       size="lg"
-                      className="shrink-0"
+                      className="shrink-0 w-full sm:w-auto h-10 sm:h-auto"
                     >
                       {copied ? (
                         <>
-                          <Check className="h-5 w-5 mr-2 text-green-600" />
+                          <Check className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
                           Copiado!
                         </>
                       ) : (
                         <>
-                          <Copy className="h-5 w-5 mr-2" />
+                          <Copy className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                           Copiar
                         </>
                       )}
@@ -363,16 +345,19 @@ const Product = () => {
             )}
 
             {/* Secondary Actions */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                className="flex-1"
-                onClick={handleShareWhatsApp}
+                className="flex-1 h-10 sm:h-12"
+                onClick={handleShare}
               >
                 <Share2 className="h-4 w-4 mr-2" />
-                Compartilhar
+                <span className="hidden sm:inline">Compartilhar</span>
+                <span className="sm:hidden">Compartilhar</span>
               </Button>
-              <WhatsAppCTA variant="inline" className="flex-1" />
+              <div className="flex-1">
+                <WhatsAppCTA variant="inline" className="h-10 sm:h-12" />
+              </div>
             </div>
 
             {/* Thermometer */}
@@ -404,14 +389,14 @@ const Product = () => {
 
         {/* Specs */}
         {product.specs && Object.keys(product.specs).length > 0 && (
-          <Card className="mb-12">
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Especificações Técnicas</h2>
-              <div className="grid md:grid-cols-2 gap-4">
+          <Card className="mb-8 sm:mb-12">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Especificações Técnicas</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-2 border-b border-border/50">
-                    <span className="font-semibold text-muted-foreground">{key}:</span>
-                    <span className="text-right">{value}</span>
+                  <div key={key} className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-border/50 gap-1 sm:gap-0">
+                    <span className="font-semibold text-muted-foreground text-sm sm:text-base">{key}:</span>
+                    <span className="text-sm sm:text-base sm:text-right break-words">{value}</span>
                   </div>
                 ))}
               </div>
@@ -420,49 +405,49 @@ const Product = () => {
         )}
 
         {/* Comments */}
-        <Card className="mb-12">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <MessageCircle className="h-6 w-6" />
+        <Card className="mb-8 sm:mb-12">
+          <CardContent className="p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
               Comentários ({comments.length})
             </h2>
             
             {/* Add Comment */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-col sm:flex-row gap-2 mb-4 sm:mb-6">
               <Input
                 placeholder="Deixe seu comentário..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                className="flex-1"
+                className="flex-1 text-sm sm:text-base"
               />
-              <Button onClick={handleAddComment} disabled={!newComment.trim()}>
+              <Button onClick={handleAddComment} disabled={!newComment.trim()} className="h-10 sm:h-auto">
                 <Send className="h-4 w-4 mr-2" />
                 Enviar
               </Button>
             </div>
 
             {/* Comments List */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {comments.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
                   Seja o primeiro a comentar!
                 </p>
               ) : (
                 comments.map((comment) => (
-                  <div key={comment.id} className="p-4 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary" />
+                  <div key={comment.id} className="p-3 sm:p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                       </div>
-                      <span className="font-semibold">
+                      <span className="font-semibold text-sm sm:text-base">
                         {comment.profile?.username || 'Usuário'}
                       </span>
-                      <span className="text-sm text-muted-foreground ml-auto">
+                      <span className="text-xs sm:text-sm text-muted-foreground ml-auto">
                         {new Date(comment.created_at).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <p className="text-sm">{comment.content}</p>
+                    <p className="text-xs sm:text-sm leading-relaxed">{comment.content}</p>
                   </div>
                 ))
               )}

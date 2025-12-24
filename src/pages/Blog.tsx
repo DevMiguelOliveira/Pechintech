@@ -39,6 +39,9 @@ const Blog = () => {
 
   if (error) {
     console.error('Erro ao carregar blog:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorDetails = error instanceof Error && error.cause ? String(error.cause) : null;
+    
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <SEO
@@ -51,17 +54,36 @@ const Blog = () => {
         <p className="text-muted-foreground mb-4">
           Não foi possível carregar os artigos. Tente novamente mais tarde.
         </p>
-        {error instanceof Error && (
-          <p className="text-sm text-muted-foreground/70">
-            {error.message}
+        <div className="space-y-2 mb-6">
+          <p className="text-sm text-muted-foreground/70 font-mono bg-muted p-3 rounded">
+            {errorMessage}
           </p>
-        )}
-        <Button
-          onClick={() => window.location.reload()}
-          className="mt-4"
-        >
-          Tentar Novamente
-        </Button>
+          {errorDetails && (
+            <p className="text-xs text-muted-foreground/50">
+              {errorDetails}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-4 justify-center">
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4"
+          >
+            Tentar Novamente
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Limpa o cache do React Query
+              if (window.location) {
+                window.location.href = '/blog';
+              }
+            }}
+            className="mt-4"
+          >
+            Recarregar Página
+          </Button>
+        </div>
       </div>
     );
   }

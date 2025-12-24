@@ -3,22 +3,24 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface WhatsAppCTAProps {
-  phone?: string;
-  message?: string;
+  phone?: string; // Deprecated - não usado mais
+  message?: string; // Deprecated - não usado mais
   variant?: 'floating' | 'inline' | 'banner';
   className?: string;
+  groupLink?: string; // Link do grupo WhatsApp (opcional, sobrescreve o padrão)
 }
 
-const DEFAULT_PHONE = '5511999999999'; // Substituir pelo número real
-const DEFAULT_MESSAGE = 'Olá! Quero receber as melhores promoções de tecnologia do PechinTech! 🔥';
+const DEFAULT_GROUP_LINK = 'https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx'; // Link do grupo Pechintech [VIP] - Alerta de Ofertas Tech
 
 export function WhatsAppCTA({ 
-  phone = DEFAULT_PHONE, 
-  message = DEFAULT_MESSAGE,
+  phone,
+  message,
   variant = 'floating',
-  className 
+  className,
+  groupLink
 }: WhatsAppCTAProps) {
-  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  // Sempre usar link do grupo do WhatsApp
+  const whatsappUrl = groupLink || DEFAULT_GROUP_LINK;
 
   const handleClick = () => {
     // Analytics tracking
@@ -45,7 +47,8 @@ export function WhatsAppCTA({
           "transition-all duration-300",
           className
         )}
-        aria-label="Falar no WhatsApp"
+        aria-label="Entrar no grupo do WhatsApp"
+        title="Entrar no grupo Pechintech [VIP] - Alerta de Ofertas Tech"
       >
         <MessageCircle className="h-6 w-6 text-white" />
       </Button>
@@ -62,7 +65,7 @@ export function WhatsAppCTA({
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div>
             <h3 className="font-bold text-sm mb-1">
-              💬 Fale conosco no WhatsApp
+              💬 Entre no nosso grupo do WhatsApp
             </h3>
             <p className="text-xs text-muted-foreground">
               Receba promoções exclusivas e tire suas dúvidas
@@ -73,7 +76,7 @@ export function WhatsAppCTA({
             className="bg-green-500 hover:bg-green-600 text-white font-bold h-10 px-6"
           >
             <MessageCircle className="h-4 w-4 mr-2" />
-            Abrir WhatsApp
+            Entrar no Grupo
           </Button>
         </div>
       </div>
@@ -93,7 +96,7 @@ export function WhatsAppCTA({
       )}
     >
       <MessageCircle className="h-5 w-5 mr-2" />
-      Falar no WhatsApp
+      Entrar no Grupo
     </Button>
   );
 }

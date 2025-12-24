@@ -89,12 +89,15 @@ export function ProductCard({
     }
     
     message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
-    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_`;
+    message += `_Encontrado no PechinTech - As melhores promoções de tecnologia!_\n\n`;
+    message += `💬 Entre no nosso grupo para mais promoções:\n`;
+    message += `https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx`;
     
     // Analytics: tracking de compartilhamento
     trackShare(product.id, 'whatsapp');
     
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    // Abre o grupo do WhatsApp com a mensagem pré-formatada
+    const whatsappUrl = `https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
   const handleCardClick = () => {
@@ -313,24 +316,31 @@ export function ProductCard({
         <Button
           variant="default"
           className={cn(
-            "w-full h-12 sm:h-14 text-sm sm:text-base font-black rounded-xl px-4",
+            "w-full h-12 sm:h-14 text-xs sm:text-sm font-black rounded-xl px-2 sm:px-4",
             "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
             "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
             "shadow-2xl hover:shadow-green-500/50 hover:shadow-2xl",
             "transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1",
             "border-2 border-green-400/50 hover:border-green-300",
             "group/cta relative overflow-hidden",
-            "text-white font-extrabold tracking-wide"
+            "text-white font-extrabold tracking-tight"
           )}
           onClick={handlePromoClick}
           aria-label={`Comprar ${product.title} com desconto de ${discount}% na ${product.store}`}
         >
-          <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 whitespace-nowrap">
-            <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
-            <span className="truncate font-black">
-              {discount >= 30 ? '🔥 COMPRAR COM DESCONTO' : 'COMPRAR AGORA'}
+          <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
+            <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+            <span className="font-black leading-tight text-center">
+              {discount >= 30 ? (
+                <>
+                  <span className="hidden sm:inline">🔥 COMPRAR COM DESCONTO</span>
+                  <span className="sm:hidden">🔥 COMPRAR</span>
+                </>
+              ) : (
+                'COMPRAR AGORA'
+              )}
             </span>
-            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
           </span>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
           {/* Pulse animation for urgency */}

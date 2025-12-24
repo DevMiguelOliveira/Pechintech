@@ -12,6 +12,7 @@ export interface DbBlogPost {
   published: boolean;
   created_at: string;
   updated_at: string;
+  image_url?: string | null;
   profiles?: {
     username: string;
   } | null;
@@ -49,27 +50,63 @@ export function usePublishedBlogPosts() {
   return useQuery({
     queryKey: ['published-blog-posts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('published', true)
-        .order('created_at', { ascending: false });
+      try {
+        // Primeira tentativa: buscar posts publicados
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('published', true)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erro ao buscar posts publicados:', error);
-        throw error;
-      }
+        if (error) {
+          console.error('Erro ao buscar posts publicados:', error);
+          // Se for erro de RLS ou permissão, tenta buscar sem filtro published
+          if (error.code === 'PGRST301' || error.message?.includes('permission') || error.message?.includes('policy')) {
+            console.warn('Tentando buscar posts sem filtro published devido a erro de permissão');
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('blog_posts')
+              .select('*')
+              .order('created_at', { ascending: false });
+            
+            if (fallbackError) {
+              console.error('Erro no fallback:', fallbackError);
+              throw fallbackError;
+            }
+            
+            // Filtra manualmente posts publicados
+            const publishedPosts = (fallbackData || []).filter(post => post.published === true);
+            return publishedPosts.map(post => ({
+              ...post,
+              profiles: null,
+            })) as DbBlogPost[];
+          }
+          throw error;
+        }
 
-      // Se houver author_id, busca os profiles separadamente
-      if (data && data.length > 0) {
+        // Se não houver dados, retorna array vazio
+        if (!data || data.length === 0) {
+          console.log('Nenhum post publicado encontrado');
+          return [] as DbBlogPost[];
+        }
+
+        // Se houver author_id, busca os profiles separadamente
         const authorIds = [...new Set(data.map(post => post.author_id).filter(Boolean))] as string[];
         
         if (authorIds.length > 0) {
           try {
-            const { data: profilesData } = await supabase
+            const { data: profilesData, error: profileError } = await supabase
               .from('profiles')
               .select('id, username')
               .in('id', authorIds);
+
+            if (profileError) {
+              console.warn('Erro ao buscar profiles, continuando sem eles:', profileError);
+              // Retorna os posts sem profiles em caso de erro
+              return data.map(post => ({
+                ...post,
+                profiles: null,
+              })) as DbBlogPost[];
+            }
 
             // Mapeia os profiles para os posts
             const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
@@ -86,17 +123,21 @@ export function usePublishedBlogPosts() {
             })) as DbBlogPost[];
           }
         }
-      }
 
-      return (data || []).map(post => ({
-        ...post,
-        profiles: null,
-      })) as DbBlogPost[];
+        return data.map(post => ({
+          ...post,
+          profiles: null,
+        })) as DbBlogPost[];
+      } catch (err) {
+        console.error('Erro geral ao buscar posts:', err);
+        // Retorna array vazio em caso de erro crítico para não quebrar a UI
+        return [] as DbBlogPost[];
+      }
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 

@@ -106,9 +106,9 @@ const Product = () => {
 
   const handleShareWhatsApp = () => {
     if (!product) return;
-    const message = `🔥 *PROMOÇÃO IMPERDÍVEL!* 🔥\n\n*${product.title}*\n\n💰 De ~R$ ${product.original_price}~ por apenas:\n✅ *R$ ${product.current_price}* (-${discount}%)\n\n🏪 Loja: ${product.store}\n${product.coupon_code ? `🎫 Cupom: *${product.coupon_code}*\n` : ''}\n🔗 Confira: ${product.affiliate_url}\n\n_Encontrado no PechinTech_`;
+    // Abre diretamente o grupo do WhatsApp
     trackShare(product.id, 'whatsapp');
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    window.open('https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx', '_blank', 'noopener,noreferrer');
   };
 
   const handleAddComment = () => {
@@ -303,17 +303,29 @@ const Product = () => {
             <Button
               size="lg"
               className={cn(
-                "w-full h-16 text-lg font-black rounded-xl",
+                "w-full h-14 sm:h-16 text-sm sm:text-base md:text-lg font-black rounded-xl px-3 sm:px-4",
                 "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
                 "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
                 "shadow-2xl hover:shadow-green-500/50",
-                "text-white"
+                "text-white tracking-tight"
               )}
               onClick={handlePromoClick}
             >
-              <ExternalLink className="h-6 w-6 mr-3" />
-              {discount >= 30 ? '🔥 COMPRAR COM DESCONTO AGORA' : 'COMPRAR AGORA'}
-              <TrendingUp className="h-6 w-6 ml-3" />
+              <span className="flex items-center justify-center gap-2 sm:gap-3">
+                <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
+                <span className="leading-tight text-center">
+                  {discount >= 30 ? (
+                    <>
+                      <span className="hidden md:inline">🔥 COMPRAR COM DESCONTO AGORA</span>
+                      <span className="hidden sm:inline md:hidden">🔥 COMPRAR COM DESCONTO</span>
+                      <span className="sm:hidden">🔥 COMPRAR</span>
+                    </>
+                  ) : (
+                    'COMPRAR AGORA'
+                  )}
+                </span>
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
+              </span>
             </Button>
 
             {/* Coupon Code */}

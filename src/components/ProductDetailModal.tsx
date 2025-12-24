@@ -69,20 +69,8 @@ export function ProductDetailModal({
   };
 
   const handleShareWhatsApp = () => {
-    let message = `🔥 *PROMOÇÃO IMPERDÍVEL!* 🔥\n\n`;
-    message += `*${product.title}*\n\n`;
-    message += `💰 De ~R$ ${product.original_price.toFixed(2)}~ por apenas:\n`;
-    message += `✅ *R$ ${product.current_price.toFixed(2)}* (-${discount}%)\n\n`;
-    message += `🏪 Loja: ${product.store}\n`;
-    
-    if (product.coupon_code) {
-      message += `🎫 Cupom: *${product.coupon_code}*\n`;
-    }
-    
-    message += `\n🔗 Confira: ${product.affiliate_url}\n\n`;
-    message += `Encontrado no PechinTech: https://www.pechintech.com.br`;
-    
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    // Abre diretamente o grupo do WhatsApp
+    const whatsappUrl = 'https://chat.whatsapp.com/JwprOlOJlecIRHLZ2zJWpx';
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -160,13 +148,13 @@ export function ProductDetailModal({
             variant="default"
             size="lg"
             className={cn(
-              "w-full h-12 sm:h-14 text-base sm:text-lg font-black rounded-xl",
+              "w-full h-12 sm:h-14 text-sm sm:text-base font-black rounded-xl px-3 sm:px-4",
               "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
               "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
               "shadow-2xl hover:shadow-green-500/50",
               "transition-all duration-300 hover:scale-[1.02]",
               "border-2 border-green-400/50 hover:border-green-300",
-              "text-white font-extrabold tracking-wide",
+              "text-white font-extrabold tracking-tight",
               "group/cta relative overflow-hidden"
             )}
             onClick={() => {
@@ -180,12 +168,19 @@ export function ProductDetailModal({
               window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
             }}
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <ExternalLink className="h-5 w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
-              <span>
-                {discount >= 30 ? '🔥 COMPRAR COM DESCONTO AGORA' : 'COMPRAR AGORA'}
+            <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
+              <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
+              <span className="leading-tight text-center">
+                {discount >= 30 ? (
+                  <>
+                    <span className="hidden sm:inline">🔥 COMPRAR COM DESCONTO AGORA</span>
+                    <span className="sm:hidden">🔥 COMPRAR</span>
+                  </>
+                ) : (
+                  'COMPRAR AGORA'
+                )}
               </span>
-              <TrendingUp className="h-5 w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
           </Button>

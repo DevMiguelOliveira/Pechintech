@@ -77,8 +77,8 @@ export function ProductGrid({
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <Package className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Nenhuma promoção encontrada</h3>
-        <p className="text-muted-foreground text-sm max-w-sm">
+        <h3 className="text-lg sm:text-xl font-semibold mb-2 leading-tight">Nenhuma promoção encontrada</h3>
+        <p className="text-muted-foreground text-[0.875rem] sm:text-base max-w-sm leading-relaxed">
           Tente ajustar os filtros ou buscar por outros termos.
         </p>
       </div>
@@ -93,14 +93,14 @@ export function ProductGrid({
     >
       {title && (
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent" itemProp="name">
+          <h1 className="text-2xl sm:text-[1.75rem] md:text-[2rem] lg:text-[2.25rem] xl:text-[2.5rem] font-black mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-[1.2] tracking-tight" itemProp="name">
             {title}
           </h1>
           <div className="h-1 w-20 bg-gradient-to-r from-primary to-primary/50 rounded-full" />
           <meta itemProp="description" content={`Lista de ${products.length} promoções de tecnologia verificadas pela comunidade`} />
         </div>
       )}
-      <div className="grid grid-cols-1 gap-4 md:gap-5 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6">
         {products.map((product, index) => (
           <AnimatedProductCard
             key={product.id}

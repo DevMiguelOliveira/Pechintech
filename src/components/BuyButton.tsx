@@ -19,11 +19,11 @@ export function BuyButton({
 }: BuyButtonProps) {
   const isHotDeal = discount >= 30;
   
-  // Tamanhos padronizados
+  // Tamanhos padronizados com tipografia proporcional
   const sizeClasses = {
-    sm: 'h-11 sm:h-12 text-xs sm:text-sm px-3',
-    md: 'h-12 sm:h-14 text-sm sm:text-base px-3 sm:px-4',
-    lg: 'h-14 sm:h-16 text-base sm:text-lg px-4 sm:px-6',
+    sm: 'h-11 sm:h-12 text-[0.75rem] sm:text-[0.8125rem] px-3 font-black',
+    md: 'h-12 sm:h-14 text-[0.8125rem] sm:text-[0.875rem] px-3 sm:px-4 font-black',
+    lg: 'h-14 sm:h-16 text-[0.875rem] sm:text-base lg:text-[1.0625rem] px-4 sm:px-6 font-black',
   };
 
   // Variantes de texto responsivo
@@ -66,7 +66,7 @@ export function BuyButton({
         "transition-all duration-300 hover:scale-[1.02]",
         variant === 'page' && "hover:-translate-y-1",
         "border-2 border-green-400/50 hover:border-green-300",
-        "text-white font-extrabold tracking-tight",
+        "text-white tracking-tight leading-tight",
         "group/cta relative overflow-hidden",
         sizeClasses[size],
         className

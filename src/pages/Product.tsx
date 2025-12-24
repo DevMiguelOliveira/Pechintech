@@ -143,8 +143,8 @@ const Product = () => {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
-        <h1 className="text-4xl font-bold mb-4">Produto não encontrado</h1>
-        <p className="text-muted-foreground mb-6">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">Produto não encontrado</h1>
+        <p className="text-[0.9375rem] sm:text-base text-muted-foreground mb-6 leading-relaxed">
           O produto que você está procurando não existe ou foi removido.
         </p>
         <Button asChild>
@@ -229,7 +229,7 @@ const Product = () => {
               </div>
             </Card>
             {discount > 0 && (
-              <Badge className="w-full justify-center text-sm sm:text-base lg:text-lg font-black py-2 sm:py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white">
+              <Badge className="w-full justify-center text-[0.875rem] sm:text-base lg:text-[1.0625rem] font-black py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white leading-tight">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 -{discount}% DE DESCONTO
               </Badge>
@@ -239,10 +239,10 @@ const Product = () => {
           {/* Product Info */}
           <div className="space-y-4 sm:space-y-6">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
-              <Link to="/" className="hover:text-primary">Início</Link>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[0.75rem] sm:text-[0.8125rem] text-muted-foreground flex-wrap">
+              <Link to="/" className="hover:text-primary transition-colors">Início</Link>
               <span>/</span>
-              <Link to={`/?category=${product.categories?.slug || product.category}`} className="hover:text-primary capitalize">
+              <Link to={`/?category=${product.categories?.slug || product.category}`} className="hover:text-primary capitalize transition-colors">
                 {product.categories?.name || product.category}
               </Link>
               <span>/</span>
@@ -250,22 +250,22 @@ const Product = () => {
             </div>
 
             {/* Title - H1 */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight">
+            <h1 className="text-2xl sm:text-[1.75rem] md:text-[2rem] lg:text-[2.25rem] font-black leading-[1.2] tracking-tight">
               {product.title}
             </h1>
 
             {/* Description */}
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            <p className="text-[0.9375rem] sm:text-base lg:text-[1.0625rem] text-muted-foreground leading-[1.6]">
               {product.description}
             </p>
 
             {/* Store & Category */}
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2">
-                <Store className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+              <Badge variant="outline" className="text-[0.75rem] sm:text-[0.8125rem] px-3 sm:px-4 py-1.5 sm:py-2 font-semibold">
+                <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 {product.store}
               </Badge>
-              <Badge variant="secondary" className="text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 capitalize">
+              <Badge variant="secondary" className="text-[0.75rem] sm:text-[0.8125rem] px-3 sm:px-4 py-1.5 sm:py-2 capitalize font-semibold">
                 {product.categories?.name || product.category}
               </Badge>
             </div>
@@ -273,27 +273,27 @@ const Product = () => {
             {/* Price Section */}
             <div className="space-y-2 sm:space-y-3 p-4 sm:p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border-2 border-primary/20">
               <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                <span className="text-lg sm:text-xl text-muted-foreground line-through">
+                <span className="text-base sm:text-lg text-muted-foreground line-through font-medium">
                   {formatPrice(Number(product.original_price))}
                 </span>
                 {savings > 0 && (
-                  <Badge className="bg-green-500/10 text-green-600 border-green-500/30 text-xs sm:text-sm">
+                  <Badge className="bg-green-500/10 text-green-600 border-green-500/30 text-[0.75rem] sm:text-[0.8125rem] font-medium">
                     Economize {formatPrice(savings)}
                   </Badge>
                 )}
               </div>
               <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-primary">
+                <span className="text-[2rem] sm:text-[2.5rem] md:text-[3rem] lg:text-[3.5rem] font-black text-primary leading-[1.1] tracking-tight">
                   {formatPrice(Number(product.current_price))}
                 </span>
               </div>
             </div>
 
             {/* Trust Badge */}
-            <div className="flex items-start gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-start gap-2.5 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/30">
               <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 mt-0.5" />
-              <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                <strong>Link afiliado:</strong> Ganhamos uma pequena comissão quando você compra, sem custo adicional para você. Isso nos ajuda a manter o site gratuito e encontrar mais promoções.
+              <span className="text-[0.8125rem] sm:text-[0.875rem] text-muted-foreground leading-[1.6]">
+                <strong className="font-semibold">Link afiliado:</strong> Ganhamos uma pequena comissão quando você compra, sem custo adicional para você. Isso nos ajuda a manter o site gratuito e encontrar mais promoções.
               </span>
             </div>
 
@@ -311,8 +311,8 @@ const Product = () => {
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold mb-1">Cupom de Desconto</p>
-                      <p className="text-xl sm:text-2xl font-black font-mono text-primary uppercase break-all">
+                      <p className="text-[0.75rem] sm:text-[0.8125rem] font-semibold mb-1.5">Cupom de Desconto</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-black font-mono text-primary uppercase break-all leading-tight">
                         {product.coupon_code}
                       </p>
                     </div>
@@ -386,12 +386,12 @@ const Product = () => {
         {product.specs && Object.keys(product.specs).length > 0 && (
           <Card className="mb-8 sm:mb-12">
             <CardContent className="p-4 sm:p-6">
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Especificações Técnicas</h2>
+              <h2 className="text-xl sm:text-[1.375rem] lg:text-[1.5rem] font-bold mb-4 sm:mb-5 leading-tight">Especificações Técnicas</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-border/50 gap-1 sm:gap-0">
-                    <span className="font-semibold text-muted-foreground text-sm sm:text-base">{key}:</span>
-                    <span className="text-sm sm:text-base sm:text-right break-words">{value}</span>
+                  <div key={key} className="flex flex-col sm:flex-row sm:justify-between py-2.5 border-b border-border/50 gap-1 sm:gap-0">
+                    <span className="font-semibold text-muted-foreground text-[0.875rem] sm:text-base">{key}:</span>
+                    <span className="text-[0.875rem] sm:text-base sm:text-right break-words leading-relaxed">{value}</span>
                   </div>
                 ))}
               </div>
@@ -402,7 +402,7 @@ const Product = () => {
         {/* Comments */}
         <Card className="mb-8 sm:mb-12">
           <CardContent className="p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-[1.375rem] lg:text-[1.5rem] font-bold mb-4 sm:mb-5 flex items-center gap-2 leading-tight">
               <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
               Comentários ({comments.length})
             </h2>
@@ -414,7 +414,7 @@ const Product = () => {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                className="flex-1 text-sm sm:text-base"
+                className="flex-1 text-[0.875rem] sm:text-base leading-relaxed"
               />
               <Button onClick={handleAddComment} disabled={!newComment.trim()} className="h-10 sm:h-auto">
                 <Send className="h-4 w-4 mr-2" />
@@ -425,7 +425,7 @@ const Product = () => {
             {/* Comments List */}
             <div className="space-y-3 sm:space-y-4">
               {comments.length === 0 ? (
-                <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
+                <p className="text-center text-muted-foreground py-6 sm:py-8 text-[0.875rem] sm:text-base leading-relaxed">
                   Seja o primeiro a comentar!
                 </p>
               ) : (
@@ -435,14 +435,14 @@ const Product = () => {
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                         <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                       </div>
-                      <span className="font-semibold text-sm sm:text-base">
+                      <span className="font-semibold text-[0.875rem] sm:text-base">
                         {comment.profile?.username || 'Usuário'}
                       </span>
-                      <span className="text-xs sm:text-sm text-muted-foreground ml-auto">
+                      <span className="text-[0.75rem] sm:text-[0.8125rem] text-muted-foreground ml-auto">
                         {new Date(comment.created_at).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm leading-relaxed">{comment.content}</p>
+                    <p className="text-[0.8125rem] sm:text-[0.875rem] leading-relaxed">{comment.content}</p>
                   </div>
                 ))
               )}

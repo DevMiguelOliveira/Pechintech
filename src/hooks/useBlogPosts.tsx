@@ -30,18 +30,44 @@ export function useBlogPosts() {
   return useQuery({
     queryKey: ['blog-posts'],
     queryFn: async () => {
+      // Busca posts sem join para evitar problemas de RLS
       const { data, error } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          profiles (
-            username
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as DbBlogPost[];
+      
+      if (!data || data.length === 0) {
+        return [] as DbBlogPost[];
+      }
+
+      // Busca profiles separadamente
+      const authorIds = [...new Set(data.map(post => post.author_id).filter(Boolean))] as string[];
+      
+      if (authorIds.length > 0) {
+        try {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', authorIds);
+
+          if (profilesData && profilesData.length > 0) {
+            const profilesMap = new Map(profilesData.map((p: any) => [p.id, p]));
+            return data.map((post: any) => ({
+              ...post,
+              profiles: post.author_id ? profilesMap.get(post.author_id) || null : null,
+            })) as DbBlogPost[];
+          }
+        } catch (profileError) {
+          console.warn('Erro ao buscar profiles:', profileError);
+        }
+      }
+
+      return data.map((post: any) => ({
+        ...post,
+        profiles: null,
+      })) as DbBlogPost[];
     },
   });
 }
@@ -51,36 +77,37 @@ export function usePublishedBlogPosts() {
     queryKey: ['published-blog-posts'],
     queryFn: async () => {
       try {
-        // Primeira tentativa: buscar posts publicados
-        const { data, error } = await supabase
+        console.log('Iniciando busca de posts publicados...');
+        
+        // Estratégia 1: Buscar posts publicados diretamente
+        let { data, error } = await supabase
           .from('blog_posts')
           .select('*')
           .eq('published', true)
           .order('created_at', { ascending: false });
 
+        // Se houver erro, tenta estratégias alternativas
         if (error) {
-          console.error('Erro ao buscar posts publicados:', error);
-          // Se for erro de RLS ou permissão, tenta buscar sem filtro published
-          if (error.code === 'PGRST301' || error.message?.includes('permission') || error.message?.includes('policy')) {
-            console.warn('Tentando buscar posts sem filtro published devido a erro de permissão');
-            const { data: fallbackData, error: fallbackError } = await supabase
-              .from('blog_posts')
-              .select('*')
-              .order('created_at', { ascending: false });
-            
-            if (fallbackError) {
-              console.error('Erro no fallback:', fallbackError);
-              throw fallbackError;
-            }
-            
-            // Filtra manualmente posts publicados
-            const publishedPosts = (fallbackData || []).filter(post => post.published === true);
-            return publishedPosts.map(post => ({
-              ...post,
-              profiles: null,
-            })) as DbBlogPost[];
+          console.warn('Erro na busca inicial:', error);
+          
+          // Estratégia 2: Buscar todos e filtrar no cliente
+          const { data: allData, error: allError } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (allError) {
+            console.error('Erro ao buscar todos os posts:', allError);
+            // Estratégia 3: Retornar array vazio se tudo falhar
+            console.warn('Retornando array vazio devido a erros de permissão');
+            return [] as DbBlogPost[];
           }
-          throw error;
+
+          // Filtra posts publicados no cliente
+          data = (allData || []).filter((post: any) => post.published === true) as any[];
+          console.log(`Encontrados ${data.length} posts publicados (filtrado no cliente)`);
+        } else {
+          console.log(`Encontrados ${data?.length || 0} posts publicados`);
         }
 
         // Se não houver dados, retorna array vazio
@@ -89,55 +116,67 @@ export function usePublishedBlogPosts() {
           return [] as DbBlogPost[];
         }
 
-        // Se houver author_id, busca os profiles separadamente
-        const authorIds = [...new Set(data.map(post => post.author_id).filter(Boolean))] as string[];
+        // Garante que data seja um array válido
+        const postsData = Array.isArray(data) ? data : [];
+
+        // Busca profiles separadamente (opcional, não crítico)
+        const authorIds = [...new Set(postsData.map((post: any) => post.author_id).filter(Boolean))] as string[];
         
         if (authorIds.length > 0) {
           try {
-            const { data: profilesData, error: profileError } = await supabase
+            const { data: profilesData } = await supabase
               .from('profiles')
               .select('id, username')
               .in('id', authorIds);
 
-            if (profileError) {
-              console.warn('Erro ao buscar profiles, continuando sem eles:', profileError);
-              // Retorna os posts sem profiles em caso de erro
-              return data.map(post => ({
-                ...post,
-                profiles: null,
+            if (profilesData && profilesData.length > 0) {
+              const profilesMap = new Map(profilesData.map((p: any) => [p.id, p]));
+              return postsData.map((post: any) => ({
+                id: post.id,
+                title: post.title,
+                slug: post.slug,
+                content: post.content,
+                excerpt: post.excerpt,
+                author_id: post.author_id,
+                published: post.published,
+                created_at: post.created_at,
+                updated_at: post.updated_at,
+                image_url: post.image_url || null,
+                profiles: post.author_id ? profilesMap.get(post.author_id) || null : null,
               })) as DbBlogPost[];
             }
-
-            // Mapeia os profiles para os posts
-            const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
-            return data.map(post => ({
-              ...post,
-              profiles: post.author_id ? profilesMap.get(post.author_id) || null : null,
-            })) as DbBlogPost[];
           } catch (profileError) {
-            console.warn('Erro ao buscar profiles, continuando sem eles:', profileError);
-            // Retorna os posts sem profiles em caso de erro
-            return data.map(post => ({
-              ...post,
-              profiles: null,
-            })) as DbBlogPost[];
+            console.warn('Erro ao buscar profiles (não crítico):', profileError);
           }
         }
 
-        return data.map(post => ({
-          ...post,
+        // Retorna posts sem profiles se não conseguir buscar
+        return postsData.map((post: any) => ({
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          content: post.content,
+          excerpt: post.excerpt,
+          author_id: post.author_id,
+          published: post.published,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          image_url: post.image_url || null,
           profiles: null,
         })) as DbBlogPost[];
       } catch (err) {
-        console.error('Erro geral ao buscar posts:', err);
-        // Retorna array vazio em caso de erro crítico para não quebrar a UI
+        console.error('Erro crítico ao buscar posts:', err);
+        // Retorna array vazio para não quebrar a UI
         return [] as DbBlogPost[];
       }
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 2,
+    retryDelay: 1000,
+    // Não retry em caso de erro de permissão
+    retryOnMount: true,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -145,20 +184,48 @@ export function useBlogPost(slug: string) {
   return useQuery({
     queryKey: ['blog-post', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!slug) {
+        throw new Error('Slug é obrigatório');
+      }
+
+      console.log(`Buscando post com slug: ${slug}`);
+      
+      // Estratégia 1: Buscar com filtro published
+      let { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('slug', slug)
         .eq('published', true)
         .single();
 
+      // Se houver erro, tenta buscar sem filtro published e filtra no cliente
       if (error) {
-        console.error('Erro ao buscar post:', error);
-        throw error;
+        console.warn('Erro na busca inicial, tentando sem filtro published:', error);
+        const { data: allData, error: allError } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+
+        if (allError) {
+          console.error('Erro ao buscar post:', allError);
+          throw allError;
+        }
+
+        // Verifica se o post está publicado
+        if (!allData || allData.published !== true) {
+          throw new Error('Post não encontrado ou não publicado');
+        }
+
+        data = allData;
       }
 
-      // Se houver author_id, busca o profile separadamente
-      if (data?.author_id) {
+      if (!data) {
+        throw new Error('Post não encontrado');
+      }
+
+      // Busca profile separadamente (opcional)
+      if (data.author_id) {
         try {
           const { data: profileData } = await supabase
             .from('profiles')
@@ -171,11 +238,7 @@ export function useBlogPost(slug: string) {
             profiles: profileData || null,
           } as DbBlogPost;
         } catch (profileError) {
-          console.warn('Erro ao buscar profile, continuando sem ele:', profileError);
-          return {
-            ...data,
-            profiles: null,
-          } as DbBlogPost;
+          console.warn('Erro ao buscar profile (não crítico):', profileError);
         }
       }
 
@@ -187,6 +250,7 @@ export function useBlogPost(slug: string) {
     enabled: !!slug,
     retry: 2,
     retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 }
 

@@ -236,11 +236,6 @@ export function ProductCard({
             <span className="text-2xl sm:text-3xl font-black text-primary leading-none">
               {formatPrice(product.current_price)}
             </span>
-            {discount > 0 && (
-              <span className="text-xs text-muted-foreground font-medium">
-                ou {formatPrice(Math.round(product.current_price / 12))}/mês
-              </span>
-            )}
           </div>
         </div>
 

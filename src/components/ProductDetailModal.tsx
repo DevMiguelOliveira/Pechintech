@@ -133,11 +133,6 @@ export function ProductDetailModal({
               <span className="text-xl sm:text-2xl md:text-3xl font-black text-green-600 leading-none">
                 {formatPrice(product.current_price)}
               </span>
-              {discount > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  ou {formatPrice(Math.round(product.current_price / 12))}/mês
-                </span>
-              )}
             </div>
           </div>
 

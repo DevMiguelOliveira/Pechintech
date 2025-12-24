@@ -286,11 +286,6 @@ const Product = () => {
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black text-primary">
                   {formatPrice(Number(product.current_price))}
                 </span>
-                {discount > 0 && (
-                  <span className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-                    ou {formatPrice(Math.round(Number(product.current_price) / 12))}/mês
-                  </span>
-                )}
               </div>
             </div>
 

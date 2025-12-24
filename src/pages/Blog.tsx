@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePublishedBlogPosts } from '@/hooks/useBlogPosts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEO } from '@/components/SEO';
 import { Calendar, User } from 'lucide-react';
@@ -39,12 +38,30 @@ const Blog = () => {
   }
 
   if (error) {
+    console.error('Erro ao carregar blog:', error);
     return (
       <div className="container mx-auto px-4 py-8 text-center">
+        <SEO
+          title="Blog - Erro"
+          description="Erro ao carregar artigos do blog"
+          url="/blog"
+          noindex={true}
+        />
         <h1 className="text-4xl font-bold mb-4">Erro ao carregar blog</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-4">
           Não foi possível carregar os artigos. Tente novamente mais tarde.
         </p>
+        {error instanceof Error && (
+          <p className="text-sm text-muted-foreground/70">
+            {error.message}
+          </p>
+        )}
+        <Button
+          onClick={() => window.location.reload()}
+          className="mt-4"
+        >
+          Tentar Novamente
+        </Button>
       </div>
     );
   }

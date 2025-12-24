@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ExternalLink, Store, MessageCircle, Send, User, Trash2, Share2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ExternalLink, Store, MessageCircle, Send, User, Trash2, Share2, Shield, Copy } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,8 @@ import { Separator } from '@/components/ui/separator';
 import { Thermometer } from '@/components/Thermometer';
 import { Product, Comment } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { trackPromoClick } from '@/services/analytics';
+import { toast } from '@/hooks/use-toast';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -36,6 +39,7 @@ export function ProductDetailModal({
 }: ProductDetailModalProps) {
   const [newComment, setNewComment] = useState('');
   const { user, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   if (!product) return null;
 
@@ -123,36 +127,97 @@ export function ProductDetailModal({
             {product.description}
           </p>
 
-          {/* Price & Buttons */}
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <span className="text-[10px] sm:text-[11px] md:text-sm text-muted-foreground line-through block">
+          {/* Price & Savings - Enhanced */}
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] sm:text-[11px] md:text-sm text-muted-foreground line-through">
                 {formatPrice(product.original_price)}
               </span>
-              <span className="text-base sm:text-lg md:text-xl font-bold text-primary">
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-green-500/10 text-green-600 border-green-500/30">
+                Economize {formatPrice(product.original_price - product.current_price)}
+              </Badge>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-green-600 leading-none">
                 {formatPrice(product.current_price)}
               </span>
+              {discount > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  ou {formatPrice(Math.round(product.current_price / 12))}/mês
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="neon"
-                size="sm"
-                className="h-7 sm:h-8 px-2 sm:px-3 text-[11px] sm:text-sm"
-                onClick={() => window.open(product.affiliate_url, '_blank', 'noopener,noreferrer')}
-              >
-                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
-                Pegar Promoção!
-              </Button>
+          </div>
+
+          {/* Trust Badge */}
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/80 px-2 py-1 bg-muted/30 rounded-lg border border-border/30">
+            <Shield className="h-3 w-3 shrink-0" />
+            <span>Link afiliado • Ganhamos comissão sem custo extra para você</span>
+          </div>
+
+          {/* Main CTA - Conversion Optimized */}
+          <Button
+            variant="default"
+            size="lg"
+            className={cn(
+              "w-full h-12 sm:h-14 text-base sm:text-lg font-black rounded-xl",
+              "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
+              "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
+              "shadow-2xl hover:shadow-green-500/50",
+              "transition-all duration-300 hover:scale-[1.02]",
+              "border-2 border-green-400/50 hover:border-green-300",
+              "text-white font-extrabold tracking-wide",
+              "group/cta relative overflow-hidden"
+            )}
+            onClick={() => {
+              trackPromoClick({
+                id: product.id,
+                title: product.title,
+                store: product.store,
+                price: product.current_price,
+                category: product.category,
+              });
+              window.open(product.affiliate_url, '_blank', 'noopener,noreferrer');
+            }}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <ExternalLink className="h-5 w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
+              <span>
+                {discount >= 30 ? '🔥 COMPRAR COM DESCONTO AGORA' : 'COMPRAR AGORA'}
+              </span>
+              <TrendingUp className="h-5 w-5 shrink-0 group-hover/cta:translate-x-1 transition-transform" />
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
+          </Button>
+
+          {/* Secondary Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-10 hover:bg-green-500/10 hover:border-green-500/50"
+              onClick={handleShareWhatsApp}
+            >
+              <Share2 className="h-4 w-4 mr-2 text-green-500" />
+              Compartilhar
+            </Button>
+            {product.coupon_code && (
               <Button
                 variant="outline"
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-green-500/10 hover:border-green-500/50"
-                onClick={handleShareWhatsApp}
-                title="Compartilhar no WhatsApp"
+                size="sm"
+                className="flex-1 h-10 border-primary/30 hover:bg-primary/10"
+                onClick={() => {
+                  navigator.clipboard.writeText(product.coupon_code!);
+                  toast({
+                    title: 'Cupom copiado!',
+                    description: `Código "${product.coupon_code}" copiado.`,
+                  });
+                }}
               >
-                <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-500" />
+                <Copy className="h-4 w-4 mr-2" />
+                Cupom
               </Button>
-            </div>
+            )}
           </div>
 
           {/* Thermometer */}

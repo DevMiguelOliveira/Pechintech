@@ -8,6 +8,9 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { MobileFilters } from '@/components/MobileFilters';
 import { FavoritesDrawer } from '@/components/FavoritesDrawer';
+import { LeadCapture } from '@/components/LeadCapture';
+import { WhatsAppCTA } from '@/components/WhatsAppCTA';
+import { FAQSection } from '@/components/FAQSection';
 import { SEO } from '@/components/SEO';
 import { useActiveProducts, DbProduct } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
@@ -205,13 +208,38 @@ const Index = () => {
     deleteComment.mutate({ commentId, productId: selectedProduct.id });
   };
 
+  // FAQ Data for SEO
+  const faqData = [
+    {
+      question: 'Como funciona o PechinTech?',
+      answer: 'O PechinTech é uma plataforma colaborativa onde a comunidade encontra e avalia as melhores promoções de tecnologia. Você pode votar se uma oferta é "quente" (boa) ou "fria" (ruim), comentar e compartilhar com amigos.',
+    },
+    {
+      question: 'Os links são seguros?',
+      answer: 'Sim! Todos os links são verificados e direcionam para lojas parceiras confiáveis. Utilizamos links afiliados, o que significa que ganhamos uma pequena comissão quando você compra, sem custo adicional para você.',
+    },
+    {
+      question: 'Como posso receber promoções exclusivas?',
+      answer: 'Cadastre seu email no banner acima ou fale conosco no WhatsApp para receber as melhores ofertas em primeira mão, antes mesmo de serem publicadas no site.',
+    },
+    {
+      question: 'Os cupons de desconto são válidos?',
+      answer: 'Sim! Todos os cupons são testados antes de serem publicados. Se encontrar algum cupom que não funciona, avise nos comentários para que possamos atualizar.',
+    },
+    {
+      question: 'Vale a pena comprar produtos em promoção?',
+      answer: 'Depende! Analisamos cada produto considerando preço, qualidade e necessidade. Nossa comunidade avalia cada oferta para te ajudar a tomar a melhor decisão. Sempre compare preços e leia as especificações antes de comprar.',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="PechinTech | Site Oficial - Promoções de Tecnologia no Brasil"
-        description="PechinTech é o site oficial de promoções de tecnologia do Brasil. Encontre as melhores ofertas de hardware, games, smartphones e periféricos. Compare preços e economize com cupons exclusivos PechinTech. Vote nas melhores pechinchas e compartilhe com a comunidade!"
-        keywords="pechintech, pechintech.com.br, www.pechintech.com.br, promoções tecnologia, ofertas hardware, descontos games, promoções smartphones, notebooks baratos, placa de vídeo promoção, processador barato, memória RAM oferta, SSD promoção, monitor gamer, teclado mecânico, mouse gamer, headset promoção, PC gamer barato, pechinchas tecnologia, cupom desconto tecnologia"
+        title="PechinTech | Promoções de Tecnologia - Melhores Ofertas e Descontos"
+        description={`Encontre as melhores promoções de tecnologia no Brasil! ${products.length > 0 ? `${products.length} ofertas verificadas` : 'Ofertas'} de hardware, games, smartphones e periféricos com os menores preços. Cupons exclusivos e avaliações da comunidade. Compare preços e economize agora!`}
+        keywords="promoções tecnologia, ofertas hardware, descontos games, promoções smartphones, notebooks baratos, placa de vídeo promoção, processador barato, memória RAM oferta, SSD promoção, monitor gamer, teclado mecânico, mouse gamer, headset promoção, PC gamer barato, pechinchas tecnologia, cupom desconto tecnologia, onde comprar tecnologia barato, melhor custo benefício tecnologia"
         url="/"
+        faqData={faqData}
         structuredData={products.length > 0 ? {
           '@context': 'https://schema.org',
           '@type': 'WebPage',
@@ -298,6 +326,11 @@ const Index = () => {
               </div>
             ) : (
               <>
+                {/* Lead Capture Banner */}
+                {!searchQuery && !selectedCategory && (
+                  <LeadCapture variant="banner" />
+                )}
+
                 {/* Banner Grupos */}
                 {!searchQuery && !selectedCategory && trendingProducts.length > 0 && (
                   <BannerGrupos />
@@ -333,12 +366,29 @@ const Index = () => {
                 />
 
                 {filteredProducts.length === 0 && !isLoading && (
-                  <div className="text-center py-16">
+                  <div className="text-center py-16 space-y-6">
                     <p className="text-muted-foreground text-lg">
                       {searchQuery || selectedCategory 
                         ? 'Nenhum produto encontrado com esses filtros.'
                         : 'Nenhum produto cadastrado ainda. Acesse o painel admin para adicionar.'}
                     </p>
+                    {!searchQuery && !selectedCategory && (
+                      <LeadCapture variant="inline" />
+                    )}
+                  </div>
+                )}
+
+                {/* Lead Capture Section - After Products */}
+                {filteredProducts.length > 0 && !searchQuery && !selectedCategory && (
+                  <div className="mt-8">
+                    <LeadCapture variant="inline" />
+                  </div>
+                )}
+
+                {/* FAQ Section - SEO Content */}
+                {!searchQuery && !selectedCategory && (
+                  <div className="mt-12">
+                    <FAQSection faqs={faqData} />
                   </div>
                 )}
               </>
@@ -366,6 +416,9 @@ const Index = () => {
         onRemoveFavorite={handleToggleFavorite}
         onOpenDetails={setSelectedProduct}
       />
+
+      {/* WhatsApp Floating CTA */}
+      <WhatsAppCTA variant="floating" />
     </div>
   );
 };

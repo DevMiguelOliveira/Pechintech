@@ -17,9 +17,9 @@ interface SEOProps {
   breadcrumbs?: Array<{ name: string; url: string }>;
 }
 
-const defaultTitle = 'PechinTech | Site Oficial - Promoções de Tecnologia no Brasil';
-const defaultDescription = 'PechinTech é o site oficial de promoções de tecnologia do Brasil. Encontre as melhores ofertas de hardware, games, smartphones e periféricos. Compare preços e economize com cupons exclusivos PechinTech.';
-const defaultKeywords = 'pechintech, pechintech.com.br, www.pechintech.com.br, promoções tecnologia, ofertas hardware, descontos games, promoções smartphones, notebooks baratos, placa de vídeo promoção, processador barato, memória RAM oferta, SSD promoção, monitor gamer, teclado mecânico, mouse gamer, headset promoção, PC gamer barato, pechinchas tecnologia, cupom desconto tecnologia';
+const defaultTitle = 'PechinTech | Promoções de Tecnologia - Melhores Ofertas e Descontos';
+const defaultDescription = 'Encontre as melhores promoções de tecnologia no Brasil! Hardware, games, smartphones e periféricos com os menores preços. Cupons exclusivos e ofertas verificadas pela comunidade. Compare preços e economize!';
+const defaultKeywords = 'promoções tecnologia, ofertas hardware, descontos games, promoções smartphones, notebooks baratos, placa de vídeo promoção, processador barato, memória RAM oferta, SSD promoção, monitor gamer, teclado mecânico, mouse gamer, headset promoção, PC gamer barato, pechinchas tecnologia, cupom desconto tecnologia, onde comprar tecnologia barato, melhor custo benefício tecnologia';
 const defaultImage = 'https://storage.googleapis.com/gpt-engineer-file-uploads/uGvIu746MfU4oUgKOxjO2PRbF313/social-images/social-1765503088493-Logo PechinTech.png';
 const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.pechintech.com.br';
 const siteName = 'PechinTech';
@@ -39,6 +39,7 @@ export function SEO({
   tags = [],
   structuredData,
   breadcrumbs,
+  faqData,
 }: SEOProps) {
   const fullTitle = title === defaultTitle ? title : `${title} | ${defaultTitle}`;
   const fullUrl = url.startsWith('http') ? url : `${siteUrl}${url}`;
@@ -212,6 +213,24 @@ export function SEO({
       {brandStructuredData && (
         <script type="application/ld+json">
           {JSON.stringify(brandStructuredData)}
+        </script>
+      )}
+
+      {/* FAQ Structured Data */}
+      {faqData && faqData.length > 0 && (
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqData.map(faq => ({
+              '@type': 'Question',
+              name: faq.question,
+              acceptedAnswer: {
+                '@type': 'Answer',
+                text: faq.answer,
+              },
+            })),
+          })}
         </script>
       )}
     </Helmet>

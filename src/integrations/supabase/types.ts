@@ -116,6 +116,7 @@ export type Database = {
           category_id: string | null
           cold_votes: number
           comments_count: number
+          coupon_code: string | null
           created_at: string
           current_price: number
           description: string
@@ -135,6 +136,7 @@ export type Database = {
           category_id?: string | null
           cold_votes?: number
           comments_count?: number
+          coupon_code?: string | null
           created_at?: string
           current_price: number
           description: string
@@ -154,6 +156,7 @@ export type Database = {
           category_id?: string | null
           cold_votes?: number
           comments_count?: number
+          coupon_code?: string | null
           created_at?: string
           current_price?: number
           description?: string

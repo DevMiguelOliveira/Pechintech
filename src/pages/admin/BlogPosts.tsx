@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { BulkCreateBlogPosts } from '@/components/admin/BulkCreateBlogPosts';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -188,6 +189,9 @@ const BlogPosts = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Bulk Create Component */}
+      <BulkCreateBlogPosts />
 
       <div className="grid gap-4">
         {posts?.map((post) => (

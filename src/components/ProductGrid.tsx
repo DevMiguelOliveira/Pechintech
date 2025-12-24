@@ -36,13 +36,14 @@ export function ProductGrid({
   }
 
   return (
-    <section className="py-6 md:py-8 lg:py-10">
+    <section className="py-6 md:py-8 lg:py-10" itemScope itemType="https://schema.org/ItemList">
       {title && (
         <div className="mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent" itemProp="name">
             {title}
-          </h2>
+          </h1>
           <div className="h-1 w-20 bg-gradient-to-r from-primary to-primary/50 rounded-full" />
+          <meta itemProp="description" content={`Lista de ${products.length} promoções de tecnologia verificadas pela comunidade`} />
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6">

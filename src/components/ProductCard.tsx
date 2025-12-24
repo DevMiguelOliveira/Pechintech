@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, ExternalLink, Store, Copy, Check, Share2, Sparkles, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, MessageCircle, ExternalLink, Store, Copy, Check, Share2, Sparkles, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Thermometer } from '@/components/Thermometer';
@@ -26,6 +27,7 @@ export function ProductCard({
   isFavorite = false,
 }: ProductCardProps) {
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
   
   const discount = Math.round(
     ((product.original_price - product.current_price) / product.original_price) * 100
@@ -103,7 +105,15 @@ export function ProductCard({
       price: product.current_price,
       category: product.category,
     });
-    onOpenDetails(product);
+    // Navegar para página individual do produto (SEO friendly)
+    const productSlug = product.title.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-') + '-' + product.id.slice(0, 8);
+    navigate(`/produto/${productSlug}`);
   };
   
   const handlePromoClick = (e: React.MouseEvent) => {
@@ -220,10 +230,15 @@ export function ProductCard({
           </Badge>
         </div>
 
-        {/* Title - Enhanced */}
+        {/* Title - SEO Optimized H3 */}
         <h3 className="font-bold text-sm sm:text-base line-clamp-2 leading-tight group-hover:text-primary transition-colors duration-300 min-h-[3em]">
           {product.title}
         </h3>
+        
+        {/* Description - SEO Content (hidden on mobile for space) */}
+        <p className="text-xs text-muted-foreground line-clamp-2 hidden sm:block mb-1">
+          {product.description}
+        </p>
 
         {/* Price Section - Enhanced with Savings Highlight */}
         <div className="space-y-1">
@@ -288,27 +303,52 @@ export function ProductCard({
           </button>
         )}
 
-        {/* Main CTA Button - Enhanced */}
+        {/* Trust Badge - Affiliate Disclosure */}
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/80 px-2 py-1 bg-muted/30 rounded-lg border border-border/30">
+          <Shield className="h-3 w-3 shrink-0" />
+          <span>Link afiliado • Ganhamos comissão sem custo extra para você</span>
+        </div>
+
+        {/* Main CTA Button - Conversion Optimized */}
         <Button
           variant="default"
           className={cn(
-            "w-full h-11 sm:h-12 text-xs sm:text-sm font-black rounded-xl px-3",
-            "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary",
-            "shadow-lg hover:shadow-xl hover:shadow-primary/50",
-            "transition-all duration-300 hover:scale-105 hover:-translate-y-0.5",
-            "border-2 border-primary/20 hover:border-primary/40",
-            "group/cta relative overflow-hidden"
+            "w-full h-12 sm:h-14 text-sm sm:text-base font-black rounded-xl px-4",
+            "bg-gradient-to-r from-green-600 via-green-500 to-emerald-500",
+            "hover:from-green-500 hover:via-green-400 hover:to-emerald-400",
+            "shadow-2xl hover:shadow-green-500/50 hover:shadow-2xl",
+            "transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1",
+            "border-2 border-green-400/50 hover:border-green-300",
+            "group/cta relative overflow-hidden",
+            "text-white font-extrabold tracking-wide"
           )}
           onClick={handlePromoClick}
-          aria-label={`Ver oferta de ${product.title} na ${product.store}`}
+          aria-label={`Comprar ${product.title} com desconto de ${discount}% na ${product.store}`}
         >
-          <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap">
-            <ExternalLink className="h-4 w-4 sm:h-4 sm:w-4 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
-            <span className="truncate">VER OFERTA AGORA</span>
-            <TrendingUp className="h-4 w-4 sm:h-4 sm:w-4 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+          <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 whitespace-nowrap">
+            <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
+            <span className="truncate font-black">
+              {discount >= 30 ? '🔥 COMPRAR COM DESCONTO' : 'COMPRAR AGORA'}
+            </span>
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 group-hover/cta:translate-x-1 transition-transform" aria-hidden="true" />
           </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover/cta:translate-x-[100%] transition-transform duration-1000" />
+          {/* Pulse animation for urgency */}
+          <div className="absolute inset-0 rounded-xl bg-green-400/20 animate-pulse opacity-0 group-hover/cta:opacity-100 transition-opacity" />
         </Button>
+
+        {/* Urgency & Social Proof */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+          <div className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="font-semibold">{product.hot_votes + product.cold_votes} pessoas avaliaram</span>
+          </div>
+          {discount >= 30 && (
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-red-500/10 text-red-600 border-red-500/30 animate-pulse">
+              ⚡ Oferta limitada
+            </Badge>
+          )}
+        </div>
 
         {/* Secondary Actions - Enhanced */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">

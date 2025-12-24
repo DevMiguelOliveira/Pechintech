@@ -96,18 +96,12 @@ export function useAddComment() {
 
       if (error) throw error;
 
-      // Update comments count on product
-      const { data: product } = await supabase
-        .from('products')
-        .select('comments_count')
-        .eq('id', productId)
-        .single();
+      // Use database function to increment comments count
+      const { error: incrementError } = await supabase.rpc('increment_comments', {
+        p_product_id: productId,
+      });
 
-      if (product) {
-        await supabase.from('products').update({
-          comments_count: product.comments_count + 1,
-        }).eq('id', productId);
-      }
+      if (incrementError) throw incrementError;
 
       return data;
     },
@@ -146,18 +140,12 @@ export function useDeleteComment() {
 
       if (error) throw error;
 
-      // Update comments count on product
-      const { data: product } = await supabase
-        .from('products')
-        .select('comments_count')
-        .eq('id', productId)
-        .single();
+      // Use database function to decrement comments count
+      const { error: decrementError } = await supabase.rpc('decrement_comments', {
+        p_product_id: productId,
+      });
 
-      if (product) {
-        await supabase.from('products').update({
-          comments_count: Math.max(0, product.comments_count - 1),
-        }).eq('id', productId);
-      }
+      if (decrementError) throw decrementError;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['comments', variables.productId] });

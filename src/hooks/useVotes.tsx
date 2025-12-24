@@ -51,88 +51,57 @@ export function useVote() {
       if (existingVote) {
         if (existingVote.vote_type === voteType) {
           // Remove vote if same type
-          await supabase.from('votes').delete().eq('id', existingVote.id);
+          const { error: deleteError } = await supabase
+            .from('votes')
+            .delete()
+            .eq('id', existingVote.id);
           
-          // Update product counters directly
-          const { data: product } = await supabase
-            .from('products')
-            .select('hot_votes, cold_votes, temperature')
-            .eq('id', productId)
-            .single();
-          
-          if (product) {
-            if (voteType === 'hot') {
-              await supabase.from('products').update({
-                hot_votes: Math.max(0, product.hot_votes - 1),
-                temperature: Math.max(0, product.temperature - 2),
-              }).eq('id', productId);
-            } else {
-              await supabase.from('products').update({
-                cold_votes: Math.max(0, product.cold_votes - 1),
-                temperature: Math.min(100, product.temperature + 2),
-              }).eq('id', productId);
-            }
-          }
+          if (deleteError) throw deleteError;
+
+          // Use database function to decrement vote count
+          const { error: decrementError } = await supabase.rpc('decrement_vote', {
+            p_product_id: productId,
+            p_vote_type: voteType,
+          });
+
+          if (decrementError) throw decrementError;
           
           return { action: 'removed' as const, voteType };
         } else {
           // Change vote type
-          await supabase
+          const { error: updateError } = await supabase
             .from('votes')
             .update({ vote_type: voteType })
             .eq('id', existingVote.id);
 
-          // Update product counters
-          const { data: product } = await supabase
-            .from('products')
-            .select('hot_votes, cold_votes, temperature')
-            .eq('id', productId)
-            .single();
-          
-          if (product) {
-            if (voteType === 'hot') {
-              await supabase.from('products').update({
-                hot_votes: product.hot_votes + 1,
-                cold_votes: Math.max(0, product.cold_votes - 1),
-                temperature: Math.min(100, product.temperature + 4),
-              }).eq('id', productId);
-            } else {
-              await supabase.from('products').update({
-                cold_votes: product.cold_votes + 1,
-                hot_votes: Math.max(0, product.hot_votes - 1),
-                temperature: Math.max(0, product.temperature - 4),
-              }).eq('id', productId);
-            }
-          }
+          if (updateError) throw updateError;
+
+          // Use database function to change vote
+          const { error: changeError } = await supabase.rpc('change_vote', {
+            p_product_id: productId,
+            p_old_vote_type: existingVote.vote_type,
+            p_new_vote_type: voteType,
+          });
+
+          if (changeError) throw changeError;
           
           return { action: 'changed' as const, voteType };
         }
       } else {
         // New vote
-        await supabase.from('votes').insert([
-          { product_id: productId, user_id: user.id, vote_type: voteType },
-        ]);
+        const { error: insertError } = await supabase
+          .from('votes')
+          .insert([{ product_id: productId, user_id: user.id, vote_type: voteType }]);
 
-        // Update product counters
-        const { data: product } = await supabase
-          .from('products')
-          .select('hot_votes, cold_votes, temperature')
-          .eq('id', productId)
-          .single();
-        
-        if (product) {
-          if (voteType === 'hot') {
-            await supabase.from('products').update({
-              hot_votes: product.hot_votes + 1,
-              temperature: Math.min(100, product.temperature + 2),
-            }).eq('id', productId);
-          } else {
-            await supabase.from('products').update({
-              cold_votes: product.cold_votes + 1,
-              temperature: Math.max(0, product.temperature - 2),
-            }).eq('id', productId);
-          }
-        }
+        if (insertError) throw insertError;
+
+        // Use database function to increment vote count
+        const { error: incrementError } = await supabase.rpc('increment_vote', {
+          p_product_id: productId,
+          p_vote_type: voteType,
+        });
+
+        if (incrementError) throw incrementError;
         
         return { action: 'added' as const, voteType };
       }

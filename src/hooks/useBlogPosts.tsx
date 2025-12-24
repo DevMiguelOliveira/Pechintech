@@ -51,20 +51,52 @@ export function usePublishedBlogPosts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          profiles (
-            username
-          )
-        `)
+        .select('*')
         .eq('published', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as DbBlogPost[];
+      if (error) {
+        console.error('Erro ao buscar posts publicados:', error);
+        throw error;
+      }
+
+      // Se houver author_id, busca os profiles separadamente
+      if (data && data.length > 0) {
+        const authorIds = [...new Set(data.map(post => post.author_id).filter(Boolean))] as string[];
+        
+        if (authorIds.length > 0) {
+          try {
+            const { data: profilesData } = await supabase
+              .from('profiles')
+              .select('id, username')
+              .in('id', authorIds);
+
+            // Mapeia os profiles para os posts
+            const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+            return data.map(post => ({
+              ...post,
+              profiles: post.author_id ? profilesMap.get(post.author_id) || null : null,
+            })) as DbBlogPost[];
+          } catch (profileError) {
+            console.warn('Erro ao buscar profiles, continuando sem eles:', profileError);
+            // Retorna os posts sem profiles em caso de erro
+            return data.map(post => ({
+              ...post,
+              profiles: null,
+            })) as DbBlogPost[];
+          }
+        }
+      }
+
+      return (data || []).map(post => ({
+        ...post,
+        profiles: null,
+      })) as DbBlogPost[];
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
+    retry: 2,
+    retryDelay: 1000,
   });
 }
 
@@ -74,20 +106,46 @@ export function useBlogPost(slug: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          profiles (
-            username
-          )
-        `)
+        .select('*')
         .eq('slug', slug)
         .eq('published', true)
         .single();
 
-      if (error) throw error;
-      return data as DbBlogPost;
+      if (error) {
+        console.error('Erro ao buscar post:', error);
+        throw error;
+      }
+
+      // Se houver author_id, busca o profile separadamente
+      if (data?.author_id) {
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .eq('id', data.author_id)
+            .single();
+
+          return {
+            ...data,
+            profiles: profileData || null,
+          } as DbBlogPost;
+        } catch (profileError) {
+          console.warn('Erro ao buscar profile, continuando sem ele:', profileError);
+          return {
+            ...data,
+            profiles: null,
+          } as DbBlogPost;
+        }
+      }
+
+      return {
+        ...data,
+        profiles: null,
+      } as DbBlogPost;
     },
     enabled: !!slug,
+    retry: 2,
+    retryDelay: 1000,
   });
 }
 

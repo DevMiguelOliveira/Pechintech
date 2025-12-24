@@ -876,14 +876,15 @@ export function BulkCreateBlogPosts() {
     // Verificar se a API key do Gemini está configurada
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     const trimmedKey = apiKey?.trim();
-    const isValidKey = trimmedKey && trimmedKey.length > 10 && !trimmedKey.includes('sua_chave');
+    // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
+    const isValidKey = trimmedKey && trimmedKey.length >= 20 && !trimmedKey.includes('sua_chave') && !trimmedKey.includes('your_api_key');
     
     console.log('[BulkCreateBlogPosts] Verificando API Key do Gemini:', {
       hasKey: !!apiKey,
       hasTrimmedKey: !!trimmedKey,
       keyLength: trimmedKey?.length || 0,
       isValidKey,
-      keyPreview: trimmedKey ? `${trimmedKey.substring(0, 10)}...` : 'não encontrada',
+      keyPreview: trimmedKey ? `${trimmedKey.substring(0, 10)}...${trimmedKey.substring(trimmedKey.length - 4)}` : 'não encontrada',
       allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
       envKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
     });
@@ -962,7 +963,8 @@ export function BulkCreateBlogPosts() {
       try {
         // Verificar API Key novamente antes de usar
         const currentApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-        const hasValidKey = currentApiKey && currentApiKey.length > 10 && !currentApiKey.includes('sua_chave');
+        // Validação: deve ter pelo menos 20 caracteres (API Keys do Google geralmente têm 39)
+        const hasValidKey = currentApiKey && currentApiKey.length >= 20 && !currentApiKey.includes('sua_chave') && !currentApiKey.includes('your_api_key');
         
         let content = '';
         let excerpt = '';

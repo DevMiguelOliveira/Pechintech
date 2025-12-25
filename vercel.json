@@ -2,6 +2,9 @@
   "functions": {
     "api/gerar-post.js": {
       "maxDuration": 30
+    },
+    "api/gerar-post-automatico.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

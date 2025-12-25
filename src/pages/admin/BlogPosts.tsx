@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { BulkCreateBlogPosts } from '@/components/admin/BulkCreateBlogPosts';
 import { GeradorIA } from '@/components/GeradorIA';
+import { AutoPublishBlog } from '@/components/admin/AutoPublishBlog';
 import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -244,6 +245,9 @@ const BlogPosts = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Auto Publish Component */}
+      <AutoPublishBlog />
 
       {/* Bulk Create Component */}
       <BulkCreateBlogPosts />

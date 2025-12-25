@@ -32,8 +32,39 @@ export interface GerarPostAutomaticoRequest {
   produtosRelacionados?: ProdutoRelacionado[];
 }
 
+export interface ConteudoEstruturado {
+  title: string;
+  slug: string;
+  metaDescription: string;
+  coverImage: {
+    source: 'site' | 'sugestao';
+    reference: string;
+  };
+  content: Array<{
+    type: 'paragraph' | 'heading' | 'image';
+    text?: string;
+    level?: number;
+    source?: 'site' | 'sugestao';
+    reference?: string;
+    alt?: string;
+  }>;
+  tags: string[];
+}
+
 export interface GerarPostAutomaticoResponse {
-  content: string;
+  // Formato antigo (markdown)
+  content?: string;
+  // Formato novo (estruturado)
+  title?: string;
+  slug?: string;
+  metaDescription?: string;
+  coverImage?: {
+    source: 'site' | 'sugestao';
+    reference: string;
+  };
+  structuredContent?: ConteudoEstruturado['content'];
+  tags?: string[];
+  format?: 'markdown' | 'structured';
   error?: string;
 }
 
@@ -67,16 +98,37 @@ export async function gerarPostAutomatico(
       };
     }
 
-    if (!data.content || typeof data.content !== 'string') {
+    // Verificar se é formato estruturado ou markdown
+    if (data.format === 'structured') {
+      // Formato novo: JSON estruturado
+      if (!data.title || !data.structuredContent || !Array.isArray(data.structuredContent)) {
+        return {
+          error: 'Resposta estruturada inválida do servidor',
+        };
+      }
+
       return {
-        content: '',
-        error: 'Resposta inválida do servidor',
+        title: data.title,
+        slug: data.slug || '',
+        metaDescription: data.metaDescription || '',
+        coverImage: data.coverImage || { source: 'sugestao', reference: '' },
+        structuredContent: data.structuredContent,
+        tags: data.tags || [],
+        format: 'structured',
+      };
+    } else {
+      // Formato antigo: markdown
+      if (!data.content || typeof data.content !== 'string') {
+        return {
+          error: 'Resposta inválida do servidor',
+        };
+      }
+
+      return {
+        content: data.content,
+        format: 'markdown',
       };
     }
-
-    return {
-      content: data.content,
-    };
   } catch (error) {
     console.error('[AutoBlog] Erro ao chamar endpoint de geração automática:', error);
     

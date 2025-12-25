@@ -39,12 +39,16 @@ export default async function handler(req, res) {
   }
 
   // Obter chave da API do ambiente (apenas no backend)
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Tentar múltiplas variáveis de ambiente para compatibilidade
+  const apiKey = process.env.GEMINI_API_KEY 
+    || process.env.VITE_GEMINI_API_KEY 
+    || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
   if (!apiKey) {
     console.error('[API] GEMINI_API_KEY não configurada no ambiente');
+    console.error('[API] Variáveis de ambiente disponíveis:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
     return res.status(500).json({ 
-      error: 'Configuração do servidor incompleta. Contate o administrador.' 
+      error: 'API Key do Gemini não configurada. Configure a variável GEMINI_API_KEY no Vercel ou no arquivo .env.local.' 
     });
   }
 

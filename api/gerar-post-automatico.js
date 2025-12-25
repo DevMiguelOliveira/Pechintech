@@ -32,12 +32,16 @@ export default async function handler(req, res) {
   }
 
   // Obter chave da API do ambiente (apenas no backend)
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Tentar múltiplas variáveis de ambiente para compatibilidade
+  const apiKey = process.env.GEMINI_API_KEY 
+    || process.env.VITE_GEMINI_API_KEY 
+    || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
   if (!apiKey) {
     console.error('[API] GEMINI_API_KEY não configurada no ambiente');
+    console.error('[API] Variáveis de ambiente disponíveis:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
     return res.status(500).json({ 
-      error: 'Configuração do servidor incompleta. Contate o administrador.' 
+      error: 'API Key do Gemini não configurada. Configure a variável GEMINI_API_KEY no Vercel ou no arquivo .env.local.' 
     });
   }
 
@@ -55,53 +59,107 @@ export default async function handler(req, res) {
       ? produtosRelacionados.map(p => `- [${p.title} - R$ ${p.current_price.toFixed(2)}](${p.affiliate_url})`).join('\n')
       : '';
 
-    prompt = `Crie um artigo de blog completo e profissional em português brasileiro sobre o produto "${tema || descricaoProduto.title}".
+    const imageUrl = descricaoProduto.image_url || '';
 
-INFORMAÇÕES DO PRODUTO:
+    prompt = `Atue como um Content Agent especializado em tecnologia, hardware e mercado tech, integrado diretamente ao código do projeto PechinTech.
+
+Seu papel é gerar, estruturar e padronizar conteúdos de blog com foco em análises informativas e consumo inteligente.
+
+CONTEXTO DO PRODUTO:
 - Título: ${descricaoProduto.title}
 - Descrição: ${descricaoProduto.description || 'Produto de tecnologia de alta qualidade'}
 - Preço: R$ ${descricaoProduto.current_price?.toFixed(2) || 'Consultar'}
 - Categoria: ${descricaoProduto.category || 'Tecnologia'}
+- Link de Afiliado: ${descricaoProduto.affiliate_url || 'N/A'}
 ${descricaoProduto.specs ? `- Especificações: ${JSON.stringify(descricaoProduto.specs)}` : ''}
+${imageUrl ? `- Imagem do Produto: ${imageUrl}` : ''}
 
-INSTRUÇÕES OBRIGATÓRIAS:
-- O artigo deve ter entre 1200 e 1800 palavras
-- Use formatação Markdown (títulos com #, listas, negrito, itálico, etc.)
-- Seja informativo, útil e otimizado para SEO
-- Inclua seções como: introdução, características principais, benefícios, comparações, dicas de uso, onde comprar
-- Use linguagem natural, envolvente e acessível
-- Seja específico sobre o produto e suas características técnicas
-- Use parágrafos bem estruturados (3-5 linhas cada)
-- Inclua listas quando apropriado
-- Use subtítulos (##) para organizar o conteúdo
-
-DIRETRIZES DE SEO:
-- Use o nome do produto no primeiro parágrafo
-- Distribua palavras-chave naturalmente (nome do produto, categoria, características)
-- Crie conteúdo original e valioso
-- Evite repetição excessiva
-- Use sinônimos e variações
-
-DIRETRIZES DE CONTEÚDO:
-- Forneça informações precisas sobre o produto
-- Cite características técnicas quando disponíveis
-- Compare com produtos similares quando apropriado
-- Inclua dicas práticas de uso
-- Seja honesto sobre prós e contras
-- Mencione a relação custo-benefício
-
-PRODUTOS RELACIONADOS (para mencionar no artigo):
+PRODUTOS RELACIONADOS DISPONÍVEIS:
 ${produtosLinks || 'Nenhum produto relacionado fornecido.'}
 
-IMPORTANTE:
-- NO FINAL DO ARTIGO, adicione uma seção "Onde Comprar" com o link de afiliado do produto principal
-- Mencione produtos relacionados de forma natural no conteúdo quando relevante
-- Use a seguinte estrutura para links de produtos: [Nome do Produto - R$ Preço](link_afiliado)
-- NÃO use linguagem promocional excessiva
-- NÃO faça afirmações falsas ou exageradas
-- Foque em valor para o leitor
+REGRAS DE EXECUÇÃO (OBRIGATÓRIAS):
 
-Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e bem estruturado.`;
+1. ESTRUTURA DE SAÍDA (NUNCA alterar):
+Gere SEMPRE o conteúdo no seguinte formato JSON estruturado:
+
+{
+  "title": "Título atrativo e otimizado para SEO sobre o produto",
+  "slug": "slug-amigavel-kebab-case",
+  "metaDescription": "Meta description clara, objetiva e atrativa (150-160 caracteres)",
+  "coverImage": {
+    "source": "${imageUrl ? 'site' : 'sugestao'}",
+    "reference": "${imageUrl || 'Imagem do produto ' + descricaoProduto.title}"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "text": "Primeiro parágrafo introduzindo o produto..."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Características Principais"
+    },
+    {
+      "type": "paragraph",
+      "text": "Conteúdo sobre características..."
+    },
+    {
+      "type": "image",
+      "source": "${imageUrl ? 'site' : 'sugestao'}",
+      "reference": "${imageUrl || 'Imagem ilustrativa do produto'}",
+      "alt": "Descrição da imagem"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Onde Comprar"
+    },
+    {
+      "type": "paragraph",
+      "text": "Texto sobre onde comprar incluindo link: [${descricaoProduto.title} - R$ ${descricaoProduto.current_price?.toFixed(2) || 'Consultar'}](${descricaoProduto.affiliate_url || '#'})"
+    }
+  ],
+  "tags": ["hardware", "tecnologia", "${descricaoProduto.category?.toLowerCase() || 'produtos'}", "análise", "guia"]
+}
+
+2. ATUALIZAÇÃO E QUALIDADE:
+- Produza conteúdo atual, relevante e útil sobre o produto
+- Não gere texto genérico ou vago
+- Escreva como um editor tech experiente
+- Artigo deve ter entre 1200 e 1800 palavras
+
+3. SEO E LEGIBILIDADE:
+- Crie título com potencial de clique incluindo o nome do produto
+- Gere slug amigável em kebab-case baseado no título
+- Meta description clara, objetiva e atrativa (150-160 caracteres)
+- Linguagem técnica acessível
+
+4. IMAGENS:
+${imageUrl ? `- Use "source": "site" e "reference": "${imageUrl}" para a imagem do produto` : `- Use "source": "sugestao" e descreva o tipo de imagem ideal do produto`}
+- Priorize imagens de produtos do site quando disponíveis
+
+5. CONTEÚDO EDITORIAL:
+- Não use linguagem promocional direta
+- Não use CTAs agressivos
+- Posicione o PechinTech como fonte confiável e curadora
+- Seja honesto sobre prós e contras do produto
+- Mencione produtos relacionados de forma natural quando relevante
+
+6. TAGS:
+- Gere de 4 a 8 tags relevantes
+- Exemplo: ["hardware", "tecnologia", "${descricaoProduto.category?.toLowerCase() || 'produtos'}", "análise", "guia", "review"]
+
+7. REGRAS FINAIS:
+- NÃO explique o que está fazendo
+- NÃO adicione comentários fora do JSON
+- Retorne APENAS o JSON válido
+- O array "content" deve ter pelo menos 8-12 elementos (parágrafos, headings, imagens)
+- Inclua seções como: introdução, características principais, benefícios, comparações, dicas de uso, onde comprar
+- Use parágrafos bem estruturados (3-5 linhas cada)
+- Inclua pelo menos 2-3 headings (level 2 ou 3) para organizar o conteúdo
+
+Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o JSON válido, sem explicações ou comentários adicionais.`;
 
   } else if (tipo === 'novidade') {
     // Gerar post sobre novidade de tecnologia
@@ -115,48 +173,114 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e 
       ? produtosRelacionados.map(p => `- [${p.title} - R$ ${p.current_price.toFixed(2)}](${p.affiliate_url})`).join('\n')
       : '';
 
-    prompt = `Crie um artigo de blog completo e profissional em português brasileiro sobre a novidade de tecnologia: "${tema.trim()}".
+    prompt = `Atue como um Content Agent especializado em tecnologia, hardware e mercado tech, integrado diretamente ao código do projeto PechinTech.
 
-INSTRUÇÕES OBRIGATÓRIAS:
-- O artigo deve ter entre 1200 e 1800 palavras
-- Use formatação Markdown (títulos com #, listas, negrito, itálico, etc.)
-- Seja informativo, útil e otimizado para SEO
-- Foque em NOVIDADES ATUAIS (2024-2025) de tecnologia, hardware ou games
-- Inclua seções como: introdução, o que é essa novidade, impacto no mercado, benefícios, comparações, conclusão
-- Use linguagem natural, envolvente e acessível
-- Seja específico e atualizado sobre a novidade
-- Use parágrafos bem estruturados (3-5 linhas cada)
-- Inclua listas quando apropriado
-- Use subtítulos (##) para organizar o conteúdo
+Seu papel é gerar, estruturar e padronizar conteúdos de blog com foco em:
+- Novidades de tecnologia
+- Lançamentos de hardware
+- Tendências do mercado tech
+- Análises informativas e consumo inteligente
 
-DIRETRIZES DE SEO:
-- Use o tema principal no primeiro parágrafo
-- Distribua palavras-chave naturalmente
-- Crie conteúdo original e valioso
-- Evite repetição excessiva
-- Use sinônimos e variações
-
-DIRETRIZES DE CONTEÚDO:
-- Forneça informações precisas e ATUALIZADAS sobre a novidade
-- Cite características técnicas quando relevante
-- Compare com tecnologias anteriores quando apropriado
-- Inclua dicas práticas e aplicações
-- Seja honesto sobre prós e contras
-- Mencione o impacto no mercado
+TEMA DA NOVIDADE: "${tema.trim()}"
 
 PRODUTOS RELACIONADOS DISPONÍVEIS NO SITE:
 ${produtosLinks || 'Nenhum produto relacionado fornecido.'}
 
-IMPORTANTE:
-- Mencione produtos relacionados de forma NATURAL no conteúdo quando fizer sentido
-- NO FINAL DO ARTIGO, adicione uma seção "Produtos Relacionados" com links dos produtos fornecidos
-- Use a seguinte estrutura para links: [Nome do Produto - R$ Preço](link_afiliado)
-- NÃO use linguagem promocional excessiva
-- NÃO faça afirmações falsas ou exageradas
-- Foque em valor para o leitor
+REGRAS DE EXECUÇÃO (OBRIGATÓRIAS):
+
+1. ESTRUTURA DE SAÍDA (NUNCA alterar):
+Gere SEMPRE o conteúdo no seguinte formato JSON estruturado:
+
+{
+  "title": "Título atrativo e otimizado para SEO sobre a novidade",
+  "slug": "slug-amigavel-kebab-case",
+  "metaDescription": "Meta description clara, objetiva e atrativa sobre a novidade (150-160 caracteres)",
+  "coverImage": {
+    "source": "sugestao",
+    "reference": "Imagem ilustrativa relacionada à novidade: ${tema.trim()}"
+  },
+  "content": [
+    {
+      "type": "paragraph",
+      "text": "Primeiro parágrafo introduzindo a novidade..."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "O que é essa novidade?"
+    },
+    {
+      "type": "paragraph",
+      "text": "Conteúdo explicativo..."
+    },
+    {
+      "type": "image",
+      "source": "sugestao",
+      "reference": "Imagem ilustrativa da novidade",
+      "alt": "Descrição da imagem"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Impacto no Mercado"
+    },
+    {
+      "type": "paragraph",
+      "text": "Conteúdo sobre impacto..."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Produtos Relacionados"
+    },
+    {
+      "type": "paragraph",
+      "text": "Texto mencionando produtos relacionados de forma natural: ${produtosLinks || 'Nenhum produto relacionado disponível no momento.'}"
+    }
+  ],
+  "tags": ["tecnologia", "novidades", "hardware", "tendências", "mercado-tech"]
+}
+
+2. ATUALIZAÇÃO E QUALIDADE:
+- Produza conteúdo ATUAL e relevante sobre a novidade (foco em 2024-2025)
+- Não gere texto genérico ou vago
+- Escreva como um editor tech experiente
+- Artigo deve ter entre 1200 e 1800 palavras
 - Seja específico sobre a NOVIDADE e seu impacto atual
 
-Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e bem estruturado.`;
+3. SEO E LEGIBILIDADE:
+- Crie título com potencial de clique sobre a novidade
+- Gere slug amigável em kebab-case baseado no título
+- Meta description clara, objetiva e atrativa (150-160 caracteres)
+- Linguagem técnica acessível
+
+4. IMAGENS:
+- Use "source": "sugestao" para imagens
+- Descreva claramente o tipo de imagem ideal relacionada à novidade
+- Exemplo: "Imagem ilustrativa de ${tema.trim()}"
+
+5. CONTEÚDO EDITORIAL:
+- Não use linguagem promocional direta
+- Não use CTAs agressivos
+- Posicione o PechinTech como fonte confiável e curadora
+- Mencione produtos relacionados de forma NATURAL quando fizer sentido
+- Seja honesto sobre prós e contras da novidade
+
+6. TAGS:
+- Gere de 4 a 8 tags relevantes
+- Exemplo: ["tecnologia", "novidades", "hardware", "tendências", "mercado-tech", "lançamentos"]
+
+7. REGRAS FINAIS:
+- NÃO explique o que está fazendo
+- NÃO adicione comentários fora do JSON
+- Retorne APENAS o JSON válido
+- O array "content" deve ter pelo menos 10-15 elementos (parágrafos, headings, imagens)
+- Inclua seções como: introdução, o que é a novidade, impacto no mercado, benefícios, comparações, produtos relacionados, conclusão
+- Use parágrafos bem estruturados (3-5 linhas cada)
+- Inclua pelo menos 3-4 headings (level 2 ou 3) para organizar o conteúdo
+- Foque em NOVIDADES ATUAIS (2024-2025) de tecnologia, hardware ou games
+
+Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o JSON válido, sem explicações ou comentários adicionais.`;
   }
 
   try {
@@ -203,8 +327,9 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e 
       }
       
       if (response.status === 401 || response.status === 403) {
+        console.error('[API] Erro de autenticação - verifique se a GEMINI_API_KEY está correta');
         return res.status(500).json({ 
-          error: 'Erro de autenticação com a API de IA. Contate o administrador.' 
+          error: 'Erro de autenticação com a API de IA. Verifique se a chave da API está configurada corretamente no Vercel ou .env.local.' 
         });
       }
       
@@ -223,23 +348,62 @@ Gere o conteúdo completo do artigo em Markdown, sendo detalhado, informativo e 
 
     // Extrair conteúdo da resposta
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('[API] Resposta inválida do Gemini:', data);
+      console.error('[API] Resposta inválida do Gemini:', JSON.stringify(data, null, 2));
       return res.status(500).json({ 
-        error: 'Resposta inválida da API de IA.' 
+        error: 'Resposta inválida da API de IA. A API pode ter retornado um formato inesperado.' 
       });
     }
 
-    const content = data.candidates[0].content.parts[0].text;
+    let content = data.candidates[0].content.parts[0].text;
 
     if (!content || content.trim().length === 0) {
+      console.error('[API] Conteúdo vazio retornado pela API de IA');
+      console.error('[API] Resposta completa:', JSON.stringify(data, null, 2));
       return res.status(500).json({ 
-        error: 'Conteúdo vazio retornado pela API de IA.' 
+        error: 'Conteúdo vazio retornado pela API de IA. Tente novamente ou verifique se a API está funcionando corretamente.' 
       });
     }
 
-    // Retornar apenas o conteúdo (sem expor chaves ou dados sensíveis)
+    // Limpar o conteúdo (remover markdown code blocks se houver)
+    content = content.trim();
+    
+    // Tentar extrair JSON se estiver dentro de code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+    if (jsonMatch) {
+      content = jsonMatch[1];
+    }
+
+    // Tentar parsear como JSON
+    let parsedContent;
+    try {
+      parsedContent = JSON.parse(content);
+    } catch (parseError) {
+      // Se não for JSON válido, retornar como texto (compatibilidade com formato antigo)
+      console.warn('[API] Resposta não é JSON válido, retornando como texto:', parseError);
+      return res.status(200).json({ 
+        content: content,
+        format: 'markdown', // Formato antigo
+      });
+    }
+
+    // Validar estrutura do JSON
+    if (!parsedContent.title || !parsedContent.content || !Array.isArray(parsedContent.content)) {
+      console.warn('[API] JSON inválido ou incompleto, retornando como texto');
+      return res.status(200).json({ 
+        content: content,
+        format: 'markdown',
+      });
+    }
+
+    // Retornar JSON estruturado
     return res.status(200).json({ 
-      content: content.trim(),
+      title: parsedContent.title,
+      slug: parsedContent.slug || '',
+      metaDescription: parsedContent.metaDescription || '',
+      coverImage: parsedContent.coverImage || { source: 'sugestao', reference: '' },
+      structuredContent: parsedContent.content, // Renomear para evitar conflito com content (markdown)
+      tags: parsedContent.tags || [],
+      format: 'structured', // Novo formato
     });
 
   } catch (error) {

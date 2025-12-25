@@ -18,7 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Sparkles, AlertCircle, CheckCircle2, Zap, Package, TrendingUp } from 'lucide-react';
 import { useActiveProducts } from '@/hooks/useProducts';
 import { useCreateBlogPost } from '@/hooks/useBlogPosts';
-import { gerarPostAutomatico, encontrarProdutosRelacionados, extrairPalavrasChave, gerarTemasNovidades, type ProdutoRelacionado } from '@/services/autoBlog';
+import { gerarPostAutomatico, encontrarProdutosRelacionados, extrairPalavrasChave, gerarTemasNovidades, type ProdutoRelacionado, type GerarPostAutomaticoResponse } from '@/services/autoBlog';
+import { converterEstruturadoParaMarkdown, gerarExcerptEstruturado } from '@/utils/contentConverter';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +48,7 @@ export function AutoPublishBlog() {
   const [success, setSuccess] = useState<string | null>(null);
   const [produtosRelacionados, setProdutosRelacionados] = useState<ProdutoRelacionado[]>([]);
   const [conteudoGerado, setConteudoGerado] = useState<string>('');
+  const [conteudoEstruturado, setConteudoEstruturado] = useState<GerarPostAutomaticoResponse | null>(null);
 
   const temasNovidades = gerarTemasNovidades();
 
@@ -130,13 +132,38 @@ export function AutoPublishBlog() {
         return;
       }
 
-      if (!response.content) {
-        setError('Nenhum conteúdo foi gerado.');
-        return;
-      }
+      // Verificar formato da resposta (estruturado ou markdown)
+      if (response.format === 'structured') {
+        // Formato novo: JSON estruturado
+        if (!response.title || !response.structuredContent) {
+          setError('Resposta estruturada inválida.');
+          return;
+        }
 
-      setConteudoGerado(response.content);
-      setSuccess('Conteúdo gerado com sucesso! Revise e publique quando estiver pronto.');
+        // Converter para Markdown
+        const markdown = converterEstruturadoParaMarkdown({
+          title: response.title,
+          slug: response.slug || '',
+          metaDescription: response.metaDescription || '',
+          coverImage: response.coverImage || { source: 'sugestao', reference: '' },
+          content: response.structuredContent,
+          tags: response.tags || [],
+        });
+
+        setConteudoEstruturado(response);
+        setConteudoGerado(markdown);
+        setSuccess('Conteúdo estruturado gerado com sucesso! Revise e publique quando estiver pronto.');
+      } else {
+        // Formato antigo: markdown direto
+        if (!response.content) {
+          setError('Nenhum conteúdo foi gerado.');
+          return;
+        }
+
+        setConteudoEstruturado(null);
+        setConteudoGerado(response.content);
+        setSuccess('Conteúdo gerado com sucesso! Revise e publique quando estiver pronto.');
+      }
 
     } catch (err) {
       console.error('[AutoPublishBlog] Erro ao gerar conteúdo:', err);
@@ -159,40 +186,72 @@ export function AutoPublishBlog() {
       return;
     }
 
-    const titulo = tipoPost === 'produto' && produtoAtual
-      ? `Guia Completo: ${produtoAtual.title} - Análise e Onde Comprar`
-      : temaCustomizado.trim() || temaNovidade;
-
-    if (!titulo || titulo.trim().length < 5) {
-      setError('Título inválido para o post.');
-      return;
-    }
-
     setIsPublishing(true);
     setError(null);
 
     try {
-      // Gerar excerpt do conteúdo
-      const plainText = conteudoGerado
-        .replace(/^#+\s+/gm, '')
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-        .trim();
-      const firstParagraph = plainText.split('\n\n')[0] || plainText.substring(0, 200);
-      const excerpt = firstParagraph.length > 200 
-        ? firstParagraph.substring(0, 197) + '...' 
-        : firstParagraph;
+      let titulo: string;
+      let slug: string;
+      let excerpt: string;
+      let imageUrl: string | null = null;
+
+      // Usar dados estruturados se disponível
+      if (conteudoEstruturado && conteudoEstruturado.format === 'structured') {
+        titulo = conteudoEstruturado.title || '';
+        slug = conteudoEstruturado.slug || generateSlug(titulo);
+        excerpt = gerarExcerptEstruturado({
+          title: titulo,
+          slug: slug,
+          metaDescription: conteudoEstruturado.metaDescription || '',
+          coverImage: conteudoEstruturado.coverImage || { source: 'sugestao', reference: '' },
+          content: conteudoEstruturado.structuredContent || [],
+          tags: conteudoEstruturado.tags || [],
+        });
+
+        // Usar imagem do coverImage se for do site
+        if (conteudoEstruturado.coverImage?.source === 'site' && conteudoEstruturado.coverImage?.reference) {
+          imageUrl = conteudoEstruturado.coverImage.reference;
+        } else if (tipoPost === 'produto' && produtoAtual?.image_url) {
+          imageUrl = produtoAtual.image_url;
+        }
+      } else {
+        // Fallback para formato antigo (markdown)
+        titulo = tipoPost === 'produto' && produtoAtual
+          ? `Guia Completo: ${produtoAtual.title} - Análise e Onde Comprar`
+          : temaCustomizado.trim() || temaNovidade;
+
+        slug = generateSlug(titulo);
+
+        // Gerar excerpt do conteúdo markdown
+        const plainText = conteudoGerado
+          .replace(/^#+\s+/gm, '')
+          .replace(/\*\*/g, '')
+          .replace(/\*/g, '')
+          .trim();
+        const firstParagraph = plainText.split('\n\n')[0] || plainText.substring(0, 200);
+        excerpt = firstParagraph.length > 200 
+          ? firstParagraph.substring(0, 197) + '...' 
+          : firstParagraph;
+
+        imageUrl = tipoPost === 'produto' && produtoAtual?.image_url 
+          ? produtoAtual.image_url 
+          : null;
+      }
+
+      if (!titulo || titulo.trim().length < 5) {
+        setError('Título inválido para o post.');
+        setIsPublishing(false);
+        return;
+      }
 
       // Criar post
       await createPost.mutateAsync({
         title: titulo,
-        slug: generateSlug(titulo),
+        slug: slug,
         content: conteudoGerado,
         excerpt: excerpt,
         published: true, // Publicar automaticamente
-        image_url: tipoPost === 'produto' && produtoAtual?.image_url 
-          ? produtoAtual.image_url 
-          : null,
+        image_url: imageUrl,
       });
 
       setSuccess('Post publicado com sucesso!');

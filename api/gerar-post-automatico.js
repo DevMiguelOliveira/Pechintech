@@ -298,9 +298,8 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
       });
     }
 
-    // Tentar múltiplos modelos e endpoints
+    // Tentar múltiplos modelos (ordem: mais estáveis primeiro)
     const models = [
-      'gemini-2.0-flash-exp',
       'gemini-1.5-flash',
       'gemini-1.5-pro',
       'gemini-pro',
@@ -312,60 +311,85 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
 
     // Tentar cada modelo até um funcionar
     for (const model of models) {
-      try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanApiKey)}`;
-        
-        console.log(`[API] Tentando modelo: ${model}`);
-        console.log(`[API] URL: ${geminiUrl.replace(cleanApiKey, cleanApiKey.substring(0, 10) + '...')}`);
-        
-        response = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt,
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.7,
-              topK: 40,
-              topP: 0.95,
-              maxOutputTokens: 4096,
+      // Tentar múltiplos endpoints para cada modelo
+      const endpoints = [
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent`,
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const geminiUrl = `${endpoint}?key=${encodeURIComponent(cleanApiKey)}`;
+          
+          console.log(`[API] Tentando modelo: ${model}, endpoint: ${endpoint.includes('/v1beta/') ? 'v1beta' : 'v1'}`);
+          
+          response = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          }),
-        });
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 4096,
+              },
+            }),
+          });
 
-        if (response.ok) {
-          console.log(`[API] Sucesso com modelo: ${model}`);
-          data = await response.json();
-          break;
-        } else {
-          const errorData = await response.json().catch(() => ({}));
+          if (response.ok) {
+            console.log(`[API] ✅ Sucesso com modelo: ${model}, endpoint: ${endpoint.includes('/v1beta/') ? 'v1beta' : 'v1'}`);
+            data = await response.json();
+            break; // Sair do loop de endpoints
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.error?.message || `Erro ${response.status}`;
+            lastError = {
+              model,
+              endpoint: endpoint.includes('/v1beta/') ? 'v1beta' : 'v1',
+              status: response.status,
+              error: errorMessage,
+              errorData: errorData,
+            };
+            console.warn(`[API] ❌ Modelo ${model} (${endpoint.includes('/v1beta/') ? 'v1beta' : 'v1'}) falhou:`, {
+              status: response.status,
+              error: errorMessage,
+            });
+            
+            // Se for erro de autenticação, não tentar outros modelos/endpoints
+            if (response.status === 401 || response.status === 403) {
+              console.error('[API] 🔒 Erro de autenticação detectado, parando tentativas');
+              break; // Sair do loop de endpoints
+            }
+          }
+        } catch (endpointError) {
+          console.warn(`[API] ❌ Erro no endpoint ${endpoint}:`, endpointError.message);
           lastError = {
             model,
-            status: response.status,
-            error: errorData.error?.message || `Erro ${response.status}`,
+            endpoint: endpoint.includes('/v1beta/') ? 'v1beta' : 'v1',
+            error: endpointError.message,
           };
-          console.warn(`[API] Modelo ${model} falhou:`, lastError);
-          
-          // Se for erro de autenticação, não tentar outros modelos
-          if (response.status === 401 || response.status === 403) {
-            break;
-          }
         }
-      } catch (fetchError) {
-        console.error(`[API] Erro ao chamar modelo ${model}:`, fetchError);
-        lastError = {
-          model,
-          error: fetchError.message,
-        };
+        
+        // Se teve sucesso, sair do loop de modelos também
+        if (response && response.ok) {
+          break;
+        }
+      }
+      
+      // Se teve sucesso, sair do loop de modelos
+      if (response && response.ok) {
+        break;
       }
     }
 
@@ -417,10 +441,26 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
       }
 
       // Se chegou aqui, nenhum modelo funcionou
-      console.error('[API] Todos os modelos falharam:', lastError);
+      console.error('[API] Todos os modelos e endpoints falharam');
+      console.error('[API] Último erro:', JSON.stringify(lastError, null, 2));
+      
+      // Mensagem mais útil para o usuário
+      let userMessage = 'Erro ao gerar conteúdo. Nenhum modelo da API funcionou.';
+      if (lastError && lastError.status === 401) {
+        userMessage = 'API Key inválida ou expirada. Verifique a chave no Google AI Studio.';
+      } else if (lastError && lastError.status === 403) {
+        userMessage = 'API Key sem permissões. Verifique as permissões no Google AI Studio.';
+      } else if (lastError && lastError.error) {
+        userMessage = `Erro na API: ${lastError.error}`;
+      }
+      
       return res.status(500).json({ 
-        error: 'Erro ao gerar conteúdo. Nenhum modelo da API funcionou.',
-        details: process.env.NODE_ENV === 'development' ? JSON.stringify(lastError) : undefined,
+        error: userMessage,
+        details: process.env.NODE_ENV === 'development' ? {
+          lastError,
+          modelsTried: models,
+          apiKeyPrefix: cleanApiKey.substring(0, 10) + '...',
+        } : undefined,
       });
     }
 

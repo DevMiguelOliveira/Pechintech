@@ -289,67 +289,142 @@ Gere o conteúdo seguindo rigorosamente todas as regras acima. Retorne APENAS o 
   }
 
   try {
-    // Chamar API do Google Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Validar e limpar a API key
+    const cleanApiKey = apiKey.trim();
+    if (!cleanApiKey || cleanApiKey.length < 20) {
+      console.error('[API] API Key inválida ou muito curta');
+      return res.status(500).json({ 
+        error: 'API Key inválida. Verifique a configuração.' 
+      });
+    }
 
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
+    // Tentar múltiplos modelos e endpoints
+    const models = [
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-pro',
+    ];
+
+    let lastError = null;
+    let response = null;
+    let data = null;
+
+    // Tentar cada modelo até um funcionar
+    for (const model of models) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanApiKey)}`;
+        
+        console.log(`[API] Tentando modelo: ${model}`);
+        console.log(`[API] URL: ${geminiUrl.replace(cleanApiKey, cleanApiKey.substring(0, 10) + '...')}`);
+        
+        response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
               {
-                text: prompt,
+                parts: [
+                  {
+                    text: prompt,
+                  },
+                ],
               },
             ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error?.message || `Erro na API Gemini: ${response.status}`;
-      
-      console.error('[API] Erro na resposta do Gemini:', {
-        status: response.status,
-        error: errorMessage,
-      });
-
-      if (response.status === 400) {
-        return res.status(400).json({ 
-          error: 'Requisição inválida para a API de IA. Verifique os parâmetros.' 
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 4096,
+            },
+          }),
         });
+
+        if (response.ok) {
+          console.log(`[API] Sucesso com modelo: ${model}`);
+          data = await response.json();
+          break;
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          lastError = {
+            model,
+            status: response.status,
+            error: errorData.error?.message || `Erro ${response.status}`,
+          };
+          console.warn(`[API] Modelo ${model} falhou:`, lastError);
+          
+          // Se for erro de autenticação, não tentar outros modelos
+          if (response.status === 401 || response.status === 403) {
+            break;
+          }
+        }
+      } catch (fetchError) {
+        console.error(`[API] Erro ao chamar modelo ${model}:`, fetchError);
+        lastError = {
+          model,
+          error: fetchError.message,
+        };
       }
-      
-      if (response.status === 401 || response.status === 403) {
-        console.error('[API] Erro de autenticação - verifique se a GEMINI_API_KEY está correta');
+    }
+
+    // Se nenhum modelo funcionou, retornar erro
+    if (!response || !response.ok) {
+
+      // Tratar erro de autenticação especificamente
+      if (response && (response.status === 401 || response.status === 403)) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || 'Erro de autenticação';
+        
+        console.error('[API] Erro de autenticação detalhado:', {
+          status: response.status,
+          error: errorMessage,
+          errorData: errorData,
+          apiKeyPrefix: cleanApiKey.substring(0, 10) + '...',
+          apiKeyLength: cleanApiKey.length,
+        });
+        
+        // Mensagens mais específicas baseadas no erro
+        let userMessage = 'Erro de autenticação com a API de IA.';
+        if (errorMessage.includes('API key not valid') || errorMessage.includes('invalid API key')) {
+          userMessage = 'API Key inválida. Verifique se a chave está correta e ativa no Google AI Studio.';
+        } else if (errorMessage.includes('permission') || errorMessage.includes('forbidden')) {
+          userMessage = 'API Key sem permissões. Verifique as permissões da chave no Google AI Studio.';
+        } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+          userMessage = 'Limite de quota excedido. Verifique sua quota no Google AI Studio.';
+        }
+        
         return res.status(500).json({ 
-          error: 'Erro de autenticação com a API de IA. Verifique se a chave da API está configurada corretamente no Vercel ou .env.local.' 
+          error: userMessage,
+          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
         });
       }
       
-      if (response.status === 429) {
+      // Outros erros
+      if (response && response.status === 400) {
+        const errorData = await response.json().catch(() => ({}));
+        return res.status(400).json({ 
+          error: 'Requisição inválida para a API de IA. Verifique os parâmetros.',
+          details: process.env.NODE_ENV === 'development' ? errorData.error?.message : undefined,
+        });
+      }
+      
+      if (response && response.status === 429) {
         return res.status(429).json({ 
           error: 'Limite de requisições excedido. Tente novamente em alguns instantes.' 
         });
       }
 
+      // Se chegou aqui, nenhum modelo funcionou
+      console.error('[API] Todos os modelos falharam:', lastError);
       return res.status(500).json({ 
-        error: 'Erro ao gerar conteúdo. Tente novamente mais tarde.' 
+        error: 'Erro ao gerar conteúdo. Nenhum modelo da API funcionou.',
+        details: process.env.NODE_ENV === 'development' ? JSON.stringify(lastError) : undefined,
       });
     }
 
-    const data = await response.json();
+    // Se chegou aqui, temos uma resposta válida
 
     // Extrair conteúdo da resposta
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {

@@ -39,7 +39,7 @@ export function HeroSection({
               <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground">
-              As ofertas mais votadas pela comunidade
+              Ofertas mais recentes
             </p>
           </div>
         </div>

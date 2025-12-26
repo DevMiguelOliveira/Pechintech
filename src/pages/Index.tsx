@@ -425,7 +425,7 @@ const Index = () => {
                       ? `Promoções de ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`
                       : searchQuery
                       ? `Resultados para "${searchQuery}"`
-                      : 'As ofertas mais votadas pela comunidade'
+                      : 'Ofertas mais recentes'
                   }
                 />
 

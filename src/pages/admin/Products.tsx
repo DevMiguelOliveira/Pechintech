@@ -126,34 +126,94 @@ const ProductForm = ({
     try {
       const result = await fetchLinkPreview(previewUrl);
       
-      if (result.success && result.data) {
+      // Usa os dados principais ou fallback
+      const dataToUse = result.data || result.fallback;
+      
+      if (dataToUse) {
         // Atualiza os campos do formulário com os dados extraídos
         setForm((prev) => ({
           ...prev,
-          title: result.data!.title || prev.title,
-          description: result.data!.description || prev.description,
-          image_url: result.data!.image || prev.image_url,
+          title: dataToUse.title || prev.title,
+          description: dataToUse.description || prev.description,
+          image_url: dataToUse.image || prev.image_url,
           affiliate_url: previewUrl,
-          store: result.data!.siteName || prev.store,
+          store: dataToUse.siteName || prev.store,
         }));
         
-        toast({
-          title: 'Dados extraídos com sucesso!',
-          description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
-        });
+        if (result.success) {
+          toast({
+            title: 'Dados extraídos com sucesso!',
+            description: 'Os campos foram preenchidos automaticamente. Revise e ajuste se necessário.',
+          });
+        } else {
+          // Se usou fallback, mostra aviso mas não erro
+          toast({
+            title: 'Informações básicas extraídas',
+            description: result.error || 'Alguns campos podem precisar de ajuste manual.',
+            variant: 'default',
+          });
+        }
       } else {
+        // Se não conseguiu nem fallback, tenta extrair pelo menos a loja
+        try {
+          const urlObj = new URL(previewUrl);
+          const hostname = urlObj.hostname.replace(/^www\./, '');
+          const storeName = hostname.split('.')[0];
+          
+          if (storeName && storeName.length > 2) {
+            setForm((prev) => ({
+              ...prev,
+              affiliate_url: previewUrl,
+              store: storeName.charAt(0).toUpperCase() + storeName.slice(1),
+            }));
+            
+            toast({
+              title: 'URL adicionada',
+              description: 'Nome da loja extraído automaticamente. Preencha os demais campos.',
+              variant: 'default',
+            });
+          } else {
+            throw new Error('Não foi possível extrair informações');
+          }
+        } catch {
+          toast({
+            title: 'Não foi possível extrair',
+            description: result.error || 'Tente preencher os campos manualmente.',
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar link preview:', error);
+      
+      // Último recurso: tenta extrair pelo menos a loja da URL
+      try {
+        const urlObj = new URL(previewUrl);
+        const hostname = urlObj.hostname.replace(/^www\./, '');
+        const storeName = hostname.split('.')[0];
+        
+        if (storeName && storeName.length > 2) {
+          setForm((prev) => ({
+            ...prev,
+            affiliate_url: previewUrl,
+            store: storeName.charAt(0).toUpperCase() + storeName.slice(1),
+          }));
+          
+          toast({
+            title: 'URL adicionada',
+            description: 'Nome da loja extraído automaticamente.',
+            variant: 'default',
+          });
+        } else {
+          throw new Error('Não foi possível extrair informações');
+        }
+      } catch {
         toast({
-          title: 'Não foi possível extrair',
-          description: result.error || 'Tente preencher os campos manualmente.',
+          title: 'Erro na busca',
+          description: 'Ocorreu um erro ao buscar informações. Tente novamente.',
           variant: 'destructive',
         });
       }
-    } catch (error) {
-      toast({
-        title: 'Erro na busca',
-        description: 'Ocorreu um erro ao buscar informações. Tente novamente.',
-        variant: 'destructive',
-      });
     } finally {
       setIsFetchingPreview(false);
     }

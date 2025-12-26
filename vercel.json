@@ -5,6 +5,9 @@
     },
     "api/gerar-post-automatico.js": {
       "maxDuration": 30
+    },
+    "api/link-preview.js": {
+      "maxDuration": 20
     }
   },
   "rewrites": [

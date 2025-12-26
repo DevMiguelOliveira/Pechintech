@@ -113,7 +113,7 @@ const Index = () => {
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedSort, setSelectedSort] = useState<SortOption>('hottest');
+  const [selectedSort, setSelectedSort] = useState<SortOption>('newest'); // Padrão: mais recentes primeiro
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 

@@ -80,7 +80,7 @@ export function useActiveProducts() {
           )
         `)
         .eq('is_active', true)
-        .order('temperature', { ascending: false });
+        .order('created_at', { ascending: false }); // Produtos mais recentes primeiro
 
       if (error) throw error;
       return data as DbProduct[];
